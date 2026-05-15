@@ -15,6 +15,9 @@ Core rules:
 - Prefer wedges, fans, and caps with shared vertices over independent strips.
 - Reject brushes with tiny sliver faces unless no better representation exists.
 - Keep support faces caulked.
+- Keep all brushes generated for one source patch or patch assembly together in
+  one `func_group`; construction choices should optimize the whole grouped set,
+  not isolated brush fragments.
 
 ## Flat Sections
 

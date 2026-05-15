@@ -19,6 +19,8 @@ coherent caps, and broad convex pieces where the topology allows it.
   texture, dimensions, control points, and patch-local UV data.
 - **Patch assembly**: A connected group of patches that share quantized vertices,
   overlapping boundary spans, or intentionally touching seams.
+- **Output group**: A generated `func_group` entity that contains every brush
+  covering one patch or one patch assembly.
 - **Chart**: A mostly continuous region of a patch assembly that can be sampled
   and converted using one brush generation strategy.
 - **Source face**: A brush face that lies on, or approximates, the visible patch
@@ -58,7 +60,10 @@ coherent caps, and broad convex pieces where the topology allows it.
    - valid face plane winding
    - no accidental duplicate coplanar faces
    - no local T-junctions along generated seams
-11. Rewrite or append the brush output in the map while preserving unrelated text.
+11. Place the generated brush set for each patch or patch assembly inside one
+    `func_group` output entity.
+12. Rewrite or append the grouped brush output in the map while preserving
+    unrelated text.
 
 ## Geometry Approach
 
@@ -89,8 +94,14 @@ texture across a face that no longer represents the patch.
 ## Output Policy
 
 Initial implementation should default to preserving patches and appending
-generated brushes behind clear comments. Once confidence is high, replacing patch
+generated brushes behind clear comments. Every generated brush set for a patch
+or patch assembly must be emitted inside a `func_group`; loose generated brushes
+should be treated as invalid output. Once confidence is high, replacing patch
 blocks can become the default.
+
+Generated `func_group` entities should carry stable comments naming the source
+entity, source patch ids, and patch assembly id. If a patch assembly contains
+multiple patches, all covering brushes belong to the same group.
 
 Planned modes:
 
@@ -106,5 +117,7 @@ Planned modes:
 - Each generated brush is convex and has positive volume.
 - Every patch-facing generated face records its source patch id.
 - Adjacent generated brushes share complete edges where possible.
+- Every generated brush belongs to the `func_group` for its source patch or patch
+  assembly.
 - Flat sections never produce support thickness below `8` units by default.
 - Warnings are actionable and include entity and patch indices.

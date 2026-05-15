@@ -35,12 +35,12 @@ rewritten yet; future writer work should use source spans for stable edits.
 ### `src/geometry`
 
 Numeric primitives and geometry operations. This module should stay independent
-from map syntax. Planned contents:
+from map syntax. Current contents include:
 
-- vectors, planes, bounds, matrices
+- vectors and planes
 - Bezier patch evaluation
-- polygon clipping
-- convex hull and half-space helpers
+- adaptive surface sampling by chord error
+- convex half-space validation
 - winding validation
 - plane fitting
 - UV projection fitting
@@ -63,8 +63,10 @@ The core planning and conversion logic. It owns:
 2. `ConversionPlanner::plan` turns parsed patches into patch-level analysis.
 3. A future `AssemblyBuilder` groups patches into connected assemblies.
 4. A future `ChartPlanner` splits assemblies into conversion charts.
-5. `BrushBuilder::build` emits validated brushes.
-6. A future `MapWriter` inserts the brush output into the original document.
+5. `BrushBuilder::build` emits validated brushes grouped by source patch
+   assembly.
+6. A future `MapWriter` inserts each generated assembly as a `func_group` in the
+   original document.
 
 ## Error Model
 

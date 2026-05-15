@@ -15,6 +15,9 @@ brush emission engine is intentionally not presented as complete yet.
   flat sheets, bevels, end caps, and arbitrary simple curved meshes.
 - Group patches that share or overlap vertices so one surface assembly can be
   converted as a coherent shape rather than as isolated strips.
+- Emit generated brushes for each patch mesh or patch assembly inside a coherent
+  `func_group` so the replacement remains easy to select, inspect, and move in
+  an editor.
 - Preserve patch-facing materials by deriving brush face texture projection from
   the source patch texture coordinates.
 - Assign non-source faces to `textures/common/caulk`.
@@ -42,7 +45,8 @@ mesh-to-brushes input.map --report conversion-report.md --preserve-patches
 Current behavior:
 
 - `--dry-run` reads the map, parses entities, key/value pairs, existing brush
-  blocks, and patch control grids, then prints a planned conversion summary.
+  blocks, and patch control grids, then prints a planned conversion summary with
+  early geometry notes such as planarity, sampling counts, and planar UV fit.
 - Non-dry-run conversion returns a "not implemented" diagnostic until the brush
   builder is completed.
 
@@ -60,6 +64,7 @@ check as the project moves beyond the tiny example map.
 - [Brush Construction](docs/BRUSH_CONSTRUCTION.md)
 - [Map Format Notes](docs/MAP_FORMAT.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Credits](CREDITS.md)
 
 ## Repository Layout
 

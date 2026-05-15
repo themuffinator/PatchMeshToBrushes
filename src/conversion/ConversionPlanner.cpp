@@ -1,10 +1,111 @@
 #include "conversion/ConversionPlanner.hpp"
 
+#include "geometry/BezierPatch.hpp"
+#include "geometry/PlaneFit.hpp"
+#include "geometry/UvProjection.hpp"
+
+#include <exception>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <utility>
 
 namespace mtb::conversion {
+namespace {
+
+std::string format_double(double value) {
+  std::ostringstream out;
+  out << std::fixed << std::setprecision(4) << value;
+  return out.str();
+}
+
+std::vector<mtb::geometry::Vec3> patch_positions(
+    const mtb::map::PatchSummary& patch) {
+  std::vector<mtb::geometry::Vec3> positions;
+  positions.reserve(patch.control_point_count());
+  for (const std::vector<mtb::map::PatchControlPoint>& row :
+       patch.control_points) {
+    for (const mtb::map::PatchControlPoint& point : row) {
+      positions.push_back(point.position);
+    }
+  }
+  return positions;
+}
+
+std::vector<mtb::geometry::UvSample> patch_uv_samples(
+    const mtb::map::PatchSummary& patch) {
+  std::vector<mtb::geometry::UvSample> samples;
+  samples.reserve(patch.control_point_count());
+  for (const std::vector<mtb::map::PatchControlPoint>& row :
+       patch.control_points) {
+    for (const mtb::map::PatchControlPoint& point : row) {
+      samples.push_back({point.position, point.uv});
+    }
+  }
+  return samples;
+}
+
+mtb::geometry::BezierPatchGrid patch_bezier_grid(
+    const mtb::map::PatchSummary& patch) {
+  std::vector<std::vector<mtb::geometry::BezierControlPoint>> controls;
+  controls.reserve(patch.control_points.size());
+  for (const std::vector<mtb::map::PatchControlPoint>& row :
+       patch.control_points) {
+    std::vector<mtb::geometry::BezierControlPoint> control_row;
+    control_row.reserve(row.size());
+    for (const mtb::map::PatchControlPoint& point : row) {
+      control_row.push_back({point.position, point.uv});
+    }
+    controls.push_back(std::move(control_row));
+  }
+  return mtb::geometry::BezierPatchGrid(std::move(controls));
+}
+
+void add_geometry_notes(PatchPlan& patch_plan,
+                        const ConversionSettings& settings) {
+  const mtb::map::PatchSummary& patch = patch_plan.patch;
+  if (!patch.has_expected_grid_size()) {
+    patch_plan.notes.push_back(
+        "Geometry analysis skipped because the control grid is incomplete.");
+    return;
+  }
+
+  const std::vector<mtb::geometry::Vec3> positions = patch_positions(patch);
+  const mtb::geometry::PlanarityClassification planarity =
+      mtb::geometry::classify_planarity(positions, settings.coplanar_epsilon);
+  patch_plan.notes.push_back(
+      std::string("Control grid planarity: ") +
+      (planarity.planar ? "planar" : "non-planar") +
+      ", max plane distance " + format_double(planarity.fit.max_abs_distance) +
+      " units.");
+
+  if (planarity.planar) {
+    const mtb::geometry::PlanarUvProjection uv_projection =
+        mtb::geometry::fit_planar_uv_projection(patch_uv_samples(patch));
+    if (uv_projection.valid) {
+      patch_plan.notes.push_back(
+          "Planar UV projection fit max error " +
+          format_double(uv_projection.max_error) + ".");
+    }
+  }
+
+  try {
+    const mtb::geometry::BezierPatchGrid grid = patch_bezier_grid(patch);
+    if (grid.is_valid_quake_grid()) {
+      const mtb::geometry::SampledSurface sampled =
+          mtb::geometry::sample_surface_by_chord_error(grid, 1.0, 5);
+      patch_plan.notes.push_back(
+          "Chord-error sampling at 1 unit produced " +
+          std::to_string(sampled.samples.size()) + " samples and " +
+          std::to_string(sampled.quads.size()) + " quads.");
+    }
+  } catch (const std::exception& error) {
+    patch_plan.notes.push_back(std::string("Bezier sampling skipped: ") +
+                               error.what());
+  }
+}
+
+}  // namespace
 
 ConversionPlanner::ConversionPlanner(ConversionSettings settings)
     : settings_(settings) {}
@@ -43,6 +144,10 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
           " rows x " + std::to_string(patch.dimensions.columns) +
           " columns, " + std::to_string(patch.control_point_count()) +
           " control points.");
+    }
+
+    if (!patch.malformed) {
+      add_geometry_notes(patch_plan, settings_);
     }
 
     patch_plan.notes.push_back(

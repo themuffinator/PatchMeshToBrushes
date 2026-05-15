@@ -19,6 +19,10 @@ add_library(mtb_core
   src/cli/Arguments.cpp
   src/conversion/BrushBuilder.cpp
   src/conversion/ConversionPlanner.cpp
+  src/geometry/BezierPatch.cpp
+  src/geometry/PlaneFit.cpp
+  src/geometry/UvProjection.cpp
+  src/geometry/Winding.cpp
   src/io/FileSystem.cpp
   src/map/MapDocument.cpp
 )
@@ -53,6 +57,10 @@ if(MTB_BUILD_TESTS)
   add_executable(test_map_parser tests/test_map_parser.cpp)
   target_link_libraries(test_map_parser PRIVATE mtb_core)
   add_test(NAME map_parser COMMAND test_map_parser)
+
+  add_executable(test_geometry_core tests/test_geometry_core.cpp)
+  target_link_libraries(test_geometry_core PRIVATE mtb_core)
+  add_test(NAME geometry_core COMMAND test_geometry_core)
 
   add_executable(test_q3dm1_fixture tests/test_q3dm1_fixture.cpp)
   target_link_libraries(test_q3dm1_fixture PRIVATE mtb_core)

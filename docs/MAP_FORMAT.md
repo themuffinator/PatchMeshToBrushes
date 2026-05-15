@@ -28,13 +28,21 @@ The target output is convex `brushDef` data. Each brush must describe a valid
 closed convex polyhedron. Faces that approximate the source patch carry the
 source texture projection; support faces are caulked.
 
+Generated brushes are not written as loose top-level world brushes. All brushes
+covering a single patch mesh, or a grouped set of related patch meshes, must be
+contained in one `func_group` entity so the result remains a coherent editable
+unit.
+
 ## Comments and Formatting
 
 The writer should insert generated content with stable comments:
 
 ```text
-// MeshToBrushes begin: entity 0 patch assembly 3
+// MeshToBrushes begin: source entity 0 patch assembly 3
+{
+"classname" "func_group"
 ...
+}
 // MeshToBrushes end
 ```
 
@@ -43,8 +51,15 @@ Stable comments make repeated conversion and manual auditing easier.
 ## Entity Handling
 
 Patches should be converted in their owning entity. Worldspawn patches remain in
-worldspawn unless the user requests otherwise. Entity key/value pairs must be
+worldspawn semantically, but their generated brush replacements are wrapped in
+`func_group` entities for editor grouping. Entity key/value pairs must be
 preserved.
+
+If source patches already live in a `func_group`, the generated brushes may
+replace or accompany that group. If related patches are spread across multiple
+groups but share or overlap vertices, the conversion planner should prefer a
+single generated `func_group` for the complete patch assembly and report the
+source entity indices it covers.
 
 ## Source Preservation
 

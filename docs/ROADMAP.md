@@ -21,11 +21,11 @@
 
 ## Phase 2: Geometry Core
 
-- [ ] Implement Bezier patch evaluation.
-- [ ] Implement surface sampling by chord error.
-- [ ] Add plane fitting and planar classification.
-- [ ] Add polygon winding and convex volume validation.
-- [ ] Add UV projection fitting.
+- [x] Implement Bezier patch evaluation.
+- [x] Implement surface sampling by chord error.
+- [x] Add plane fitting and planar classification.
+- [x] Add polygon winding and convex volume validation.
+- [x] Add UV projection fitting.
 
 ## Phase 3: Patch Grouping
 
@@ -47,6 +47,7 @@
 ## Phase 5: Writer and Reports
 
 - [ ] Emit valid `brushDef` blocks.
+- [ ] Wrap every generated patch or patch-assembly brush set in a `func_group`.
 - [ ] Preserve or replace patch blocks based on CLI mode.
 - [ ] Write conversion reports.
 - [ ] Include texture projection fit diagnostics.
