@@ -4,6 +4,6 @@ namespace mtb {
 
 inline constexpr const char* kProjectName = "@PROJECT_NAME@";
 inline constexpr const char* kProgramName = "patch-mesh-to-brushes";
-inline constexpr const char* kVersion = "@PROJECT_VERSION@";
+inline constexpr const char* kVersion = "@PMTB_DISPLAY_VERSION@";
 
 }  // namespace mtb

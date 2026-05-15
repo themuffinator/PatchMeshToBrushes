@@ -32,13 +32,15 @@ def copy_if_exists(source: pathlib.Path, destination: pathlib.Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform", required=True)
+    parser.add_argument("--version")
     parser.add_argument("--build-dir", type=pathlib.Path, default=pathlib.Path("build"))
     parser.add_argument("--readme-html", type=pathlib.Path, required=True)
     parser.add_argument("--output-dir", type=pathlib.Path, default=pathlib.Path("dist"))
     args = parser.parse_args()
 
     binary = find_binary(args.build_dir)
-    package_name = f"PatchMeshToBrushes-{args.platform}"
+    version_part = f"-{args.version}" if args.version else ""
+    package_name = f"PatchMeshToBrushes{version_part}-{args.platform}"
     staging_dir = args.output_dir / package_name
     if staging_dir.exists():
         shutil.rmtree(staging_dir)

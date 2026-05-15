@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          - os: windows-2022
             label: windows-x64
           - os: macos-latest
             label: macos
@@ -26,15 +26,19 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.x"
 
+      - name: Resolve release version
+        id: version
+        run: python tools/version.py --github-output
+
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPMTB_VERSION_OVERRIDE="${{ steps.version.outputs.version }}"
 
       - name: Build
         run: cmake --build build --config Release
@@ -52,14 +56,15 @@ jobs:
         run: >
           python tools/package_release.py
           --platform ${{ matrix.label }}
+          --version ${{ steps.version.outputs.safe_version }}
           --build-dir build
           --readme-html build/README.html
           --output-dir dist
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: PatchMeshToBrushes-${{ matrix.label }}
+          name: PatchMeshToBrushes-${{ steps.version.outputs.safe_version }}-${{ matrix.label }}
           path: dist/*.zip
           if-no-files-found: error
 
@@ -71,7 +76,7 @@ jobs:
 
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist
 

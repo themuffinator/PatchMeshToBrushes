@@ -67,7 +67,8 @@ int main(int argc, char** argv) {
 
   const std::filesystem::path fixture_dir = argv[1];
   const std::string source =
-      mtb::io::read_text_file(fixture_dir / "planar_patch_input.map");
+      normalize_newlines(
+          mtb::io::read_text_file(fixture_dir / "planar_patch_input.map"));
   const mtb::map::MapDocument document = mtb::map::MapDocument::parse(source);
   require(document.diagnostics().empty(), "golden input parses cleanly");
 

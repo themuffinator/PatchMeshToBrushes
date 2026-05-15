@@ -32,5 +32,17 @@ int main() {
     assert(!result.errors.empty());
   }
 
+  {
+    const mtb::cli::ParseResult result =
+        mtb::cli::parse_arguments({"input.map", "--min-thickness", "nan"});
+    assert(!result.errors.empty());
+  }
+
+  {
+    const mtb::cli::ParseResult result =
+        mtb::cli::parse_arguments({"input.map", "--min-thickness", " 12"});
+    assert(!result.errors.empty());
+  }
+
   return 0;
 }

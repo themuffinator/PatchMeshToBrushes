@@ -1,16 +1,29 @@
 #include "cli/Arguments.hpp"
 
-#include <charconv>
+#include <cerrno>
+#include <cctype>
+#include <cmath>
+#include <cstdlib>
 #include <sstream>
 
 namespace mtb::cli {
 namespace {
 
 bool parse_double(const std::string& value, double& out) {
-  const char* begin = value.data();
-  const char* end = value.data() + value.size();
-  const auto result = std::from_chars(begin, end, out);
-  return result.ec == std::errc{} && result.ptr == end;
+  if (value.empty() || std::isspace(static_cast<unsigned char>(value.front()))) {
+    return false;
+  }
+
+  char* parsed_end = nullptr;
+  errno = 0;
+  const double parsed = std::strtod(value.c_str(), &parsed_end);
+  if (parsed_end != value.c_str() + value.size() || errno == ERANGE ||
+      !std::isfinite(parsed)) {
+    return false;
+  }
+
+  out = parsed;
+  return true;
 }
 
 bool needs_value(const std::vector<std::string>& args, std::size_t index) {

@@ -18,7 +18,7 @@ It is designed for mapper-friendly output:
 ## Getting Started
 
 1. Download the build for your computer from the
-   [latest release](https://github.com/themuffinator/MeshToBrushes/releases/latest).
+   [latest release](https://github.com/themuffinator/PatchMeshToBrushes/releases/latest).
 2. Unzip the download somewhere convenient, such as your desktop or a tools
    folder.
 3. Open a terminal in that folder.
@@ -39,7 +39,7 @@ editor and inspect the generated groups.
 
 Release downloads also include a styled `README.html` for offline reading. For
 bugs, ideas, or rough edges, use the
-[issue tracker](https://github.com/themuffinator/MeshToBrushes/issues).
+[issue tracker](https://github.com/themuffinator/PatchMeshToBrushes/issues).
 
 ## Usage
 
@@ -122,6 +122,7 @@ check as the project moves beyond the tiny example map.
 - [Brush Construction](docs/dev/BRUSH_CONSTRUCTION.md)
 - [Hardening](docs/dev/HARDENING.md)
 - [Map Format Notes](docs/dev/MAP_FORMAT.md)
+- [Releases](docs/dev/RELEASES.md)
 - [Roadmap](docs/dev/ROADMAP.md)
 - [Credits](CREDITS.md)
 

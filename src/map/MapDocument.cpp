@@ -1,8 +1,12 @@
 #include "map/MapDocument.hpp"
 
 #include <charconv>
+#include <cerrno>
 #include <cctype>
+#include <cmath>
+#include <cstdlib>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -59,10 +63,17 @@ bool parse_size(std::string_view value, std::size_t& out) {
 }
 
 bool parse_double(std::string_view value, double& out) {
-  const char* begin = value.data();
-  const char* end = value.data() + value.size();
-  const auto result = std::from_chars(begin, end, out);
-  return result.ec == std::errc{} && result.ptr == end;
+  const std::string text(value);
+  char* parsed_end = nullptr;
+  errno = 0;
+  const double parsed = std::strtod(text.c_str(), &parsed_end);
+  if (parsed_end != text.c_str() + text.size() || errno == ERANGE ||
+      !std::isfinite(parsed)) {
+    return false;
+  }
+
+  out = parsed;
+  return true;
 }
 
 class TokenCursor {

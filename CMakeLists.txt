@@ -1,14 +1,30 @@
 cmake_minimum_required(VERSION 3.20)
 
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" PMTB_BASE_VERSION)
+string(STRIP "${PMTB_BASE_VERSION}" PMTB_BASE_VERSION)
+if(NOT PMTB_BASE_VERSION MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+  message(FATAL_ERROR "VERSION must contain a simple X.Y.Z version number")
+endif()
+
 project(
   PatchMeshToBrushes
-  VERSION 0.1.0
+  VERSION "${PMTB_BASE_VERSION}"
   DESCRIPTION "Convert Quake III Arena era patchDef meshes into convex brushDef output"
   LANGUAGES CXX
 )
 
 option(PMTB_BUILD_TESTS "Build PatchMeshToBrushes tests" ON)
 option(PMTB_BUILD_BENCHMARKS "Build PatchMeshToBrushes benchmark tools" ON)
+set(PMTB_VERSION_OVERRIDE "" CACHE STRING "Override the displayed PatchMeshToBrushes version")
+set(PMTB_VERSION_SUFFIX "" CACHE STRING "Append a suffix to the displayed PatchMeshToBrushes version")
+
+if(PMTB_VERSION_OVERRIDE)
+  set(PMTB_DISPLAY_VERSION "${PMTB_VERSION_OVERRIDE}")
+else()
+  set(PMTB_DISPLAY_VERSION "${PROJECT_VERSION}${PMTB_VERSION_SUFFIX}")
+endif()
+
+message(STATUS "PatchMeshToBrushes version: ${PMTB_DISPLAY_VERSION}")
 
 configure_file(
   cmake/PatchMeshToBrushesVersion.hpp.in
