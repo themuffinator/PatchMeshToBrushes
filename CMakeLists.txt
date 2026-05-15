@@ -50,6 +50,10 @@ if(MTB_BUILD_TESTS)
   target_link_libraries(test_patch_scanner PRIVATE mtb_core)
   add_test(NAME patch_scanner COMMAND test_patch_scanner)
 
+  add_executable(test_map_parser tests/test_map_parser.cpp)
+  target_link_libraries(test_map_parser PRIVATE mtb_core)
+  add_test(NAME map_parser COMMAND test_map_parser)
+
   add_executable(test_q3dm1_fixture tests/test_q3dm1_fixture.cpp)
   target_link_libraries(test_q3dm1_fixture PRIVATE mtb_core)
   add_test(

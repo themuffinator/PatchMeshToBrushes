@@ -3,22 +3,27 @@
 #include "conversion/ConversionSettings.hpp"
 #include "map/MapDocument.hpp"
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
 namespace mtb::conversion {
 
 enum class PlannedStrategy {
-  PendingDetailedParse,
+  PendingGeometryAnalysis,
+  NeedsParserRepair,
 };
 
 struct PatchPlan {
   mtb::map::PatchSummary patch;
-  PlannedStrategy strategy = PlannedStrategy::PendingDetailedParse;
+  PlannedStrategy strategy = PlannedStrategy::PendingGeometryAnalysis;
   std::vector<std::string> notes;
 };
 
 struct ConversionPlan {
+  std::size_t entity_count = 0;
+  std::size_t brush_count = 0;
+  std::size_t parser_diagnostic_count = 0;
   std::vector<PatchPlan> patches;
   std::vector<std::string> diagnostics;
 };

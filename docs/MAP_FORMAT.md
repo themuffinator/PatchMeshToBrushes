@@ -18,6 +18,10 @@ Patch blocks commonly contain:
 The mature parser should preserve source spans so the writer can replace patch
 blocks without disturbing unrelated map text.
 
+Phase 1 parses patch materials, five-value dimension tuples, and nested control
+point grids. Malformed patch blocks are retained as patch records with
+diagnostics so dry-run analysis can continue across the rest of the map.
+
 ## Brush Output
 
 The target output is convex `brushDef` data. Each brush must describe a valid
@@ -49,6 +53,8 @@ The implementation should keep a source span for every patch:
 ```text
 start_offset
 end_offset
+body_start_offset
+body_end_offset
 entity_index
 patch_index_in_entity
 ```

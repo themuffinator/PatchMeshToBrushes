@@ -5,10 +5,9 @@ MeshToBrushes is planned as a command line converter for Quake III Arena era
 mesh in the input map and replace or accompany those curved surfaces with a
 carefully planned set of convex `brushDef` brushes.
 
-The project is currently scaffolded: it has a compilable CLI shell, patch
-discovery, conversion planning stubs, tests, and documentation for the geometry
-strategy. The actual brush emission engine is intentionally not presented as
-complete yet.
+The project has a compilable CLI shell, a preserving map parser, conversion
+planning stubs, tests, and documentation for the geometry strategy. The actual
+brush emission engine is intentionally not presented as complete yet.
 
 ## Goals
 
@@ -29,7 +28,7 @@ complete yet.
 ```powershell
 cmake -S . -B build
 cmake --build build
-ctest --test-dir build
+ctest --test-dir build -C Debug
 ```
 
 ## CLI Shape
@@ -42,16 +41,17 @@ mesh-to-brushes input.map --report conversion-report.md --preserve-patches
 
 Current behavior:
 
-- `--dry-run` reads the map, discovers patch definitions, and prints a planned
-  conversion summary.
+- `--dry-run` reads the map, parses entities, key/value pairs, existing brush
+  blocks, and patch control grids, then prints a planned conversion summary.
 - Non-dry-run conversion returns a "not implemented" diagnostic until the brush
   builder is completed.
 
 ## Test Fixtures
 
-`tests/map/q3dm1sample.map` is a real-world sample fixture. The current scanner
-expects to discover `113` `patchDef2` blocks in that map, which gives parser work
-a practical regression check as the project moves beyond the tiny example map.
+`tests/map/q3dm1sample.map` is a real-world sample fixture. The parser expects
+to discover `188` entities, `987` existing brush blocks, and `113` valid
+`patchDef2` blocks in that map, which gives later phases a practical regression
+check as the project moves beyond the tiny example map.
 
 ## Documentation
 

@@ -27,7 +27,10 @@ should retain:
 - patch blocks and their source spans
 - comments and unrelated source text where practical
 
-The current scaffold includes patch definition discovery only.
+The Phase 1 parser preserves the original source text and records parsed
+entities, entity key/value pairs, existing brush spans, patch source spans,
+materials, dimensions, and control points. Comments and unrelated text are not
+rewritten yet; future writer work should use source spans for stable edits.
 
 ### `src/geometry`
 

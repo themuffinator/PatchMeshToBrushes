@@ -12,12 +12,12 @@
 
 ## Phase 1: Map Parser
 
-- [ ] Parse entities and key/value pairs.
-- [ ] Parse existing brush blocks.
-- [ ] Parse `patchDef`, `patchDef2`, and `patchDef3` dimensions and control
+- [x] Parse entities and key/value pairs.
+- [x] Parse existing brush blocks.
+- [x] Parse `patchDef`, `patchDef2`, and `patchDef3` dimensions and control
       points.
-- [ ] Preserve exact patch source spans.
-- [ ] Report malformed patch blocks without aborting dry-run analysis.
+- [x] Preserve exact patch source spans.
+- [x] Report malformed patch blocks without aborting dry-run analysis.
 
 ## Phase 2: Geometry Core
 

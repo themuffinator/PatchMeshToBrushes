@@ -11,6 +11,16 @@ ConversionPlanner::ConversionPlanner(ConversionSettings settings)
 
 ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) const {
   ConversionPlan plan;
+  plan.entity_count = document.entities().size();
+  plan.brush_count = document.brushes().size();
+  plan.parser_diagnostic_count = document.diagnostics().size();
+
+  for (const mtb::map::ParseDiagnostic& diagnostic : document.diagnostics()) {
+    plan.diagnostics.push_back(
+        std::string(mtb::map::diagnostic_severity_name(diagnostic.severity)) +
+        " at offset " + std::to_string(diagnostic.span.start) + ": " +
+        diagnostic.message);
+  }
 
   if (document.patches().empty()) {
     plan.diagnostics.push_back("No patchDef blocks were discovered.");
@@ -20,9 +30,24 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
   for (const mtb::map::PatchSummary& patch : document.patches()) {
     PatchPlan patch_plan;
     patch_plan.patch = patch;
+    patch_plan.strategy = patch.malformed
+                              ? PlannedStrategy::NeedsParserRepair
+                              : PlannedStrategy::PendingGeometryAnalysis;
+    if (!patch.material.empty()) {
+      patch_plan.notes.push_back("Material: " + patch.material + ".");
+    }
+
+    if (patch.dimensions.parsed) {
+      patch_plan.notes.push_back(
+          "Parsed control grid: " + std::to_string(patch.dimensions.rows) +
+          " rows x " + std::to_string(patch.dimensions.columns) +
+          " columns, " + std::to_string(patch.control_point_count()) +
+          " control points.");
+    }
+
     patch_plan.notes.push_back(
-        "Detailed control grid parsing is pending; strategy will be selected "
-        "after topology and curvature analysis.");
+        "Geometry strategy will be selected after topology and curvature "
+        "analysis.");
     patch_plan.notes.push_back(
         "Minimum brush thickness setting is " +
         std::to_string(settings_.min_brush_thickness) + " units.");
@@ -37,8 +62,10 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
 
 std::string planned_strategy_name(PlannedStrategy strategy) {
   switch (strategy) {
-    case PlannedStrategy::PendingDetailedParse:
-      return "pending detailed parse";
+    case PlannedStrategy::PendingGeometryAnalysis:
+      return "pending geometry analysis";
+    case PlannedStrategy::NeedsParserRepair:
+      return "needs parser repair";
   }
 
   return "unknown";
@@ -58,7 +85,10 @@ std::string render_markdown_report(const ConversionPlan& plan,
       << "\n\n";
 
   out << "## Summary\n\n";
-  out << "- Discovered patches: " << plan.patches.size() << "\n\n";
+  out << "- Parsed entities: " << plan.entity_count << "\n";
+  out << "- Parsed brushes: " << plan.brush_count << "\n";
+  out << "- Discovered patches: " << plan.patches.size() << "\n";
+  out << "- Parser diagnostics: " << plan.parser_diagnostic_count << "\n\n";
 
   if (!plan.diagnostics.empty()) {
     out << "## Diagnostics\n\n";

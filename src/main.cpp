@@ -72,6 +72,9 @@ int main(int argc, char** argv) {
   try {
     const std::string source = mtb::io::read_text_file(parse.options.input_path);
     const mtb::map::MapDocument document = mtb::map::MapDocument::parse(source);
+    std::cout << "Parsed entities: " << document.entities().size() << "\n";
+    std::cout << "Parsed brushes: " << document.brushes().size() << "\n";
+    std::cout << "Parser diagnostics: " << document.diagnostics().size() << "\n";
 
     const mtb::conversion::ConversionSettings settings =
         settings_from_options(parse.options);
