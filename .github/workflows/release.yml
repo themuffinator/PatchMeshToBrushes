@@ -10,9 +10,27 @@ permissions:
   contents: write
 
 jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      safe_version: ${{ steps.version.outputs.safe_version }}
+      release_tag: ${{ steps.version.outputs.release_tag }}
+      release_title: ${{ steps.version.outputs.release_title }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Resolve release version
+        id: version
+        run: python tools/version.py --github-output
+
   build:
     name: Build ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
+    needs: version
     strategy:
       fail-fast: false
       matrix:
@@ -33,12 +51,8 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Resolve release version
-        id: version
-        run: python tools/version.py --github-output
-
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPMTB_VERSION_OVERRIDE="${{ steps.version.outputs.version }}"
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPMTB_VERSION_OVERRIDE="${{ needs.version.outputs.version }}"
 
       - name: Build
         run: cmake --build build --config Release
@@ -56,7 +70,7 @@ jobs:
         run: >
           python tools/package_release.py
           --platform ${{ matrix.label }}
-          --version ${{ steps.version.outputs.safe_version }}
+          --version ${{ needs.version.outputs.safe_version }}
           --build-dir build
           --readme-html build/README.html
           --output-dir dist
@@ -64,15 +78,16 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
-          name: PatchMeshToBrushes-${{ steps.version.outputs.safe_version }}-${{ matrix.label }}
+          name: PatchMeshToBrushes-${{ needs.version.outputs.safe_version }}-${{ matrix.label }}
           path: dist/*.zip
           if-no-files-found: error
 
   release:
     name: Publish GitHub release
-    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - version
+      - build
 
     steps:
       - name: Download build artifacts
@@ -83,9 +98,28 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.version.outputs.release_tag }}
+          RELEASE_TITLE: ${{ needs.version.outputs.release_title }}
         run: |
           mapfile -t files < <(find dist -name '*.zip' -type f | sort)
-          gh release create "$GITHUB_REF_NAME" "${files[@]}" \
-            --title "PatchMeshToBrushes $GITHUB_REF_NAME" \
-            --generate-notes \
-            --verify-tag
+          create_args=(
+            "$RELEASE_TAG"
+            "${files[@]}"
+            --title "$RELEASE_TITLE"
+            --generate-notes
+            --latest
+          )
+
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            create_args+=(--verify-tag)
+          else
+            create_args+=(--target "$GITHUB_SHA")
+          fi
+
+          gh release create "${create_args[@]}"
+
+          prerelease="$(gh release view "$RELEASE_TAG" --json isPrerelease --jq .isPrerelease)"
+          if [[ "$prerelease" != "false" ]]; then
+            echo "::error::Release $RELEASE_TAG was marked as a pre-release."
+            exit 1
+          fi

@@ -20,12 +20,18 @@ cmake -S . -B build -DPMTB_VERSION_OVERRIDE=0.1.0-local
 The release workflow resolves versions with `tools/version.py`:
 
 - tag builds named `vX.Y.Z` publish under that tag and embed binary version
-  `X.Y.Z+build.<github-run-number>`;
-- manual release builds use `VERSION+build.<github-run-number>`.
+  `X.Y.Z`;
+- manual release builds publish a normal GitHub release tagged as
+  `vVERSION+build.<github-run-number>`;
+- rerun manual attempts append the attempt number, such as
+  `vVERSION+build.<github-run-number>.2`.
 
 Package filenames use a filesystem-safe spelling of that resolved version, so a
 manual build for run `42` produces archives such as
 `PatchMeshToBrushes-0.1.0-build.42-windows-x64.zip`.
+
+Release creation explicitly marks the release as latest and verifies that it is
+not flagged as a pre-release.
 
 ## Push Verification
 

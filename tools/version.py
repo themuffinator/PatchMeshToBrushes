@@ -10,33 +10,50 @@ import re
 import sys
 
 
-SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+BASE_VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+RELEASE_VERSION_RE = re.compile(r"^\d+\.\d+\.\d+(?:\+build\.\d+(?:\.\d+)?)?$")
 
 
 def read_base_version(path: pathlib.Path) -> str:
     version = path.read_text(encoding="utf-8").strip()
-    if not SEMVER_RE.fullmatch(version):
+    if not BASE_VERSION_RE.fullmatch(version):
         raise ValueError(f"{path} must contain a simple X.Y.Z version")
     return version
 
 
-def release_base_version(base_version: str) -> str:
+def tag_version() -> str | None:
     ref_type = os.environ.get("GITHUB_REF_TYPE", "")
     ref_name = os.environ.get("GITHUB_REF_NAME", "")
-    if ref_type == "tag" and ref_name.startswith("v"):
-        tag_version = ref_name[1:]
-        if not SEMVER_RE.fullmatch(tag_version):
-            raise ValueError("release tags must use vX.Y.Z")
-        return tag_version
+    if ref_type != "tag" or not ref_name.startswith("v"):
+        return None
 
-    return base_version
+    version = ref_name[1:]
+    if not RELEASE_VERSION_RE.fullmatch(version):
+        raise ValueError("release tags must use vX.Y.Z or vX.Y.Z+build.N")
+    return version
+
+
+def build_iteration() -> str:
+    run_number = os.environ.get("GITHUB_RUN_NUMBER", "0")
+    run_attempt = os.environ.get("GITHUB_RUN_ATTEMPT", "1")
+    if run_attempt == "1":
+        return run_number
+    return f"{run_number}.{run_attempt}"
 
 
 def release_version(base_version: str) -> str:
-    version = release_base_version(base_version)
+    version = tag_version()
+    if version:
+        return version
 
-    run_number = os.environ.get("GITHUB_RUN_NUMBER", "0")
-    return f"{version}+build.{run_number}"
+    return f"{base_version}+build.{build_iteration()}"
+
+
+def release_tag(version: str) -> str:
+    ref_name = os.environ.get("GITHUB_REF_NAME", "")
+    if os.environ.get("GITHUB_REF_TYPE", "") == "tag":
+        return ref_name
+    return f"v{version}"
 
 
 def safe_filename_version(version: str) -> str:
@@ -51,6 +68,8 @@ def write_github_output(version: str, safe_version: str) -> None:
     with open(output_path, "a", encoding="utf-8") as output:
         output.write(f"version={version}\n")
         output.write(f"safe_version={safe_version}\n")
+        output.write(f"release_tag={release_tag(version)}\n")
+        output.write(f"release_title=PatchMeshToBrushes {version}\n")
 
 
 def main() -> int:
