@@ -32,6 +32,7 @@ documentation for the geometry strategy.
 cmake -S . -B build
 cmake --build build
 ctest --test-dir build -C Debug
+build\Debug\benchmark_large_map.exe tests\map\q3dm1sample.map 1 3
 ```
 
 ## CLI Shape
@@ -68,6 +69,7 @@ check as the project moves beyond the tiny example map.
 - [Project Plan](docs/dev/PROJECT_PLAN.md)
 - [Architecture](docs/dev/ARCHITECTURE.md)
 - [Brush Construction](docs/dev/BRUSH_CONSTRUCTION.md)
+- [Hardening](docs/dev/HARDENING.md)
 - [Map Format Notes](docs/dev/MAP_FORMAT.md)
 - [Roadmap](docs/dev/ROADMAP.md)
 - [Credits](CREDITS.md)

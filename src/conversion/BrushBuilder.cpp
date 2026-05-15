@@ -1,6 +1,7 @@
 #include "conversion/BrushBuilder.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <iomanip>
 #include <set>
@@ -226,12 +227,12 @@ std::string remove_spans(std::string_view source,
 
 std::vector<mtb::map::SourceSpan> existing_generated_group_spans(
     std::string_view source) {
-  std::vector<mtb::map::SourceSpan> spans;
+  std::vector<mtb::map::SourceSpan> raw_spans;
   std::size_t search_from = 0;
   while (true) {
     const std::size_t begin = source.find(kGeneratedGroupBegin, search_from);
     if (begin == std::string_view::npos) {
-      return spans;
+      break;
     }
 
     const std::size_t end_marker = source.find(kGeneratedGroupEnd, begin);
@@ -240,11 +241,44 @@ std::vector<mtb::map::SourceSpan> existing_generated_group_spans(
       continue;
     }
 
+    std::size_t start = begin;
+    while (start > 0 &&
+           std::isspace(static_cast<unsigned char>(source[start - 1]))) {
+      --start;
+    }
+    if (start < begin) {
+      if (source[start] == '\r' && start + 1 < begin &&
+          source[start + 1] == '\n') {
+        start += 2;
+      } else if (source[start] == '\r' || source[start] == '\n') {
+        ++start;
+      }
+    }
+
     std::size_t end = source.find('\n', end_marker);
     end = end == std::string_view::npos ? source.size() : end + 1;
-    spans.push_back({begin, end});
+    while (end < source.size() &&
+           std::isspace(static_cast<unsigned char>(source[end]))) {
+      ++end;
+    }
+    raw_spans.push_back({start, end});
     search_from = end;
   }
+
+  std::sort(raw_spans.begin(), raw_spans.end(),
+            [](const mtb::map::SourceSpan& lhs,
+               const mtb::map::SourceSpan& rhs) {
+              return lhs.start < rhs.start;
+            });
+  std::vector<mtb::map::SourceSpan> merged;
+  for (const mtb::map::SourceSpan span : raw_spans) {
+    if (merged.empty() || span.start > merged.back().end) {
+      merged.push_back(span);
+      continue;
+    }
+    merged.back().end = std::max(merged.back().end, span.end);
+  }
+  return merged;
 }
 
 void append_generated_groups(std::string& map_text,

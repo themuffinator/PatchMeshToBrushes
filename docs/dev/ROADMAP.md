@@ -54,8 +54,8 @@
 
 ## Phase 6: Hardening
 
-- [ ] Add golden map fixtures.
-- [ ] Add fuzz tests for malformed maps.
-- [ ] Add deterministic output tests.
-- [ ] Test with real Quake III Arena era editor output.
-- [ ] Add performance benchmarks for large maps.
+- [x] Add golden map fixtures.
+- [x] Add fuzz tests for malformed maps.
+- [x] Add deterministic output tests.
+- [x] Test with real Quake III Arena era editor output.
+- [x] Add performance benchmarks for large maps.

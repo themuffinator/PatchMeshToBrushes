@@ -1,0 +1,28 @@
+{
+"classname" "worldspawn"
+
+}
+
+// MeshToBrushes begin: source patch assembly 0
+// MeshToBrushes source patches: entity 0 patch 0
+{
+"classname" "func_group"
+"_mtb_assembly" "0"
+"_mtb_strategy" "planar extrusion"
+"_mtb_source_entities" "0"
+"_mtb_source_patches" "0:0"
+"_mtb_generated_by" "MeshToBrushes"
+  {
+    brushDef
+    {
+      ( 0 0 1 0 ) ( ( -0.011049 0.011049 0.5 ) ( -0.011049 -0.011049 0.5 ) ) textures/test/source 0 0 0
+      ( 0 0 -1 8 ) ( ( 0.03125 0 0 ) ( 0 0.03125 0 ) ) textures/common/caulk 0 0 0
+      ( 0 -1 0 0 ) ( ( 0.03125 0 0 ) ( 0 0.03125 0 ) ) textures/common/caulk 0 0 0
+      ( 1 0 0 64 ) ( ( 0.03125 0 0 ) ( 0 0.03125 0 ) ) textures/common/caulk 0 0 0
+      ( 0 1 0 64 ) ( ( 0.03125 0 0 ) ( 0 0.03125 0 ) ) textures/common/caulk 0 0 0
+      ( -1 0 0 0 ) ( ( 0.03125 0 0 ) ( 0 0.03125 0 ) ) textures/common/caulk 0 0 0
+    }
+  }
+}
+// MeshToBrushes end: source patch assembly 0
+

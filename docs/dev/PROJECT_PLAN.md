@@ -124,6 +124,12 @@ Planned modes:
 ## Quality Gates
 
 - Every conversion pass has deterministic output.
+- Golden fixtures pin exact map and report output for small representative
+  cases.
+- Malformed inputs are fuzzed through parse, plan, report, build, and reparse.
+- Real Quake III Arena era editor output is covered by the q3dm1 sample
+  conversion regression.
+- Large-map benchmark timing is available through `benchmark_large_map`.
 - Each generated brush is convex and has positive volume.
 - Every patch-facing generated face records its source patch id.
 - Adjacent generated brushes share complete edges where possible.

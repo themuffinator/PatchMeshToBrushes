@@ -8,6 +8,7 @@ project(
 )
 
 option(MTB_BUILD_TESTS "Build MeshToBrushes tests" ON)
+option(MTB_BUILD_BENCHMARKS "Build MeshToBrushes benchmark tools" ON)
 
 configure_file(
   cmake/MeshToBrushesVersion.hpp.in
@@ -45,6 +46,11 @@ endif()
 add_executable(mesh-to-brushes src/main.cpp)
 target_link_libraries(mesh-to-brushes PRIVATE mtb_core)
 
+if(MTB_BUILD_BENCHMARKS)
+  add_executable(benchmark_large_map benchmarks/benchmark_large_map.cpp)
+  target_link_libraries(benchmark_large_map PRIVATE mtb_core)
+endif()
+
 if(MTB_BUILD_TESTS)
   enable_testing()
 
@@ -76,6 +82,18 @@ if(MTB_BUILD_TESTS)
   target_link_libraries(test_brush_builder PRIVATE mtb_core)
   add_test(NAME brush_builder COMMAND test_brush_builder)
 
+  add_executable(test_golden_conversion tests/test_golden_conversion.cpp)
+  target_link_libraries(test_golden_conversion PRIVATE mtb_core)
+  add_test(
+    NAME golden_conversion
+    COMMAND test_golden_conversion
+      "${PROJECT_SOURCE_DIR}/tests/golden"
+  )
+
+  add_executable(test_malformed_fuzz tests/test_malformed_fuzz.cpp)
+  target_link_libraries(test_malformed_fuzz PRIVATE mtb_core)
+  add_test(NAME malformed_fuzz COMMAND test_malformed_fuzz)
+
   add_executable(test_q3dm1_fixture tests/test_q3dm1_fixture.cpp)
   target_link_libraries(test_q3dm1_fixture PRIVATE mtb_core)
   add_test(
@@ -89,6 +107,14 @@ if(MTB_BUILD_TESTS)
   add_test(
     NAME q3dm1_conversion
     COMMAND test_q3dm1_conversion
+      "${PROJECT_SOURCE_DIR}/tests/map/q3dm1sample.map"
+  )
+
+  add_executable(test_deterministic_output tests/test_deterministic_output.cpp)
+  target_link_libraries(test_deterministic_output PRIVATE mtb_core)
+  add_test(
+    NAME deterministic_output
+    COMMAND test_deterministic_output
       "${PROJECT_SOURCE_DIR}/tests/map/q3dm1sample.map"
   )
 endif()

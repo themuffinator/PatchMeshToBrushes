@@ -116,5 +116,10 @@ Start with narrow tests for:
 - texture projection fitting
 - convex brush validation
 
-Then add golden `.map` fixtures with expected report output before locking down
-exact brush text output.
+The hardening suite now adds:
+
+- golden `.map` and report fixtures
+- deterministic malformed-input fuzzing
+- byte-for-byte deterministic output checks
+- real q3dm1 parser and conversion regression tests
+- a standalone large-map benchmark executable
