@@ -18,6 +18,7 @@ configure_file(
 add_library(mtb_core
   src/cli/Arguments.cpp
   src/conversion/BrushBuilder.cpp
+  src/conversion/BrushPlanner.cpp
   src/conversion/ConversionPlanner.cpp
   src/conversion/PatchTopology.cpp
   src/geometry/BezierPatch.cpp
@@ -66,6 +67,10 @@ if(MTB_BUILD_TESTS)
   add_executable(test_patch_topology tests/test_patch_topology.cpp)
   target_link_libraries(test_patch_topology PRIVATE mtb_core)
   add_test(NAME patch_topology COMMAND test_patch_topology)
+
+  add_executable(test_brush_planner tests/test_brush_planner.cpp)
+  target_link_libraries(test_brush_planner PRIVATE mtb_core)
+  add_test(NAME brush_planner COMMAND test_brush_planner)
 
   add_executable(test_q3dm1_fixture tests/test_q3dm1_fixture.cpp)
   target_link_libraries(test_q3dm1_fixture PRIVATE mtb_core)

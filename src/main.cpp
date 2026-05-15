@@ -36,8 +36,16 @@ void print_plan_summary(const mtb::conversion::ConversionPlan& plan) {
     std::cout << "  entity " << patch.patch.entity_index << ", patch "
               << patch.patch.patch_index << ", "
               << mtb::map::patch_kind_name(patch.patch.kind) << " at offset "
-              << patch.patch.keyword_span.start << ", strategy "
-              << mtb::conversion::planned_strategy_name(patch.strategy) << "\n";
+              << patch.patch.keyword_span.start;
+    if (patch.has_brush_strategy) {
+      std::cout << ", brush plan "
+                << mtb::conversion::brush_planning_strategy_name(
+                       patch.brush_strategy);
+    } else {
+      std::cout << ", strategy "
+                << mtb::conversion::planned_strategy_name(patch.strategy);
+    }
+    std::cout << "\n";
   }
 
   for (const std::string& diagnostic : plan.diagnostics) {

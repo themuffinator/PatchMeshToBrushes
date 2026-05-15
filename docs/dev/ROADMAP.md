@@ -37,12 +37,12 @@
 
 ## Phase 4: Brush Planning
 
-- [ ] Build shared segmentation lattices.
-- [ ] Generate planar extrusions with minimum thickness.
-- [ ] Generate curved sheet wedges from backface projection.
-- [ ] Generate cylinder sectors and caps.
-- [ ] Generate dome and sphere sectors.
-- [ ] Add arbitrary fallback subdivision and merge passes.
+- [x] Build shared segmentation lattices.
+- [x] Generate planar extrusions with minimum thickness.
+- [x] Generate curved sheet wedges from backface projection.
+- [x] Generate cylinder sectors and caps.
+- [x] Generate dome and sphere sectors.
+- [x] Add arbitrary fallback subdivision and merge passes.
 
 ## Phase 5: Writer and Reports
 

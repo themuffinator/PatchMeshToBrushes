@@ -7,6 +7,9 @@ deterministic, and easy to review.
 
 - Prefer the existing C++20/CMake structure and local module boundaries.
 - Keep parser and geometry decisions explicit in tests and documentation.
+- Keep all technical and development documents under `docs/dev/`. This includes
+  architecture, roadmap, implementation planning, map format, and brush
+  construction notes.
 - Preserve source-map text whenever possible; later writer phases depend on
   stable source spans.
 - Run the relevant build and tests before reporting completion:

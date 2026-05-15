@@ -54,6 +54,8 @@ The core planning and conversion logic. It owns:
 - quantized patch boundary matching
 - shared and overlapping boundary span detection
 - topology classification
+- shared segmentation lattice summaries
+- in-memory brush planning
 - segmentation planning
 - brush generation
 - texture projection solving
@@ -64,9 +66,10 @@ The core planning and conversion logic. It owns:
 1. `MapDocument::parse` loads the source and records patch spans.
 2. `ConversionPlanner::plan` turns parsed patches into patch-level analysis.
 3. A future `AssemblyBuilder` groups patches into connected assemblies.
-4. A future `ChartPlanner` splits assemblies into conversion charts.
-5. `BrushBuilder::build` emits validated brushes grouped by source patch
-   assembly.
+4. `BrushPlanner::plan` builds assembly brush plans with segmentation lattice
+   summaries, source/support faces, strategy labels, and validation results.
+5. `BrushBuilder::build` will turn validated brush plans into grouped map
+   output.
 6. A future `MapWriter` inserts each generated assembly as a `func_group` in the
    original document.
 

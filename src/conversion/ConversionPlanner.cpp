@@ -119,8 +119,19 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
 
   const PatchTopology topology =
       PatchTopologyBuilder(settings_).build(document.patches());
+  const BrushPlanningResult brush_planning =
+      BrushPlanner(settings_).plan(document.patches(), topology);
   plan.topology_connection_count = topology.connections.size();
   plan.skipped_topology_patch_count = topology.skipped_patch_indices.size();
+  plan.planned_brush_count = brush_planning.total_brush_count;
+  plan.invalid_planned_brush_count = brush_planning.invalid_brush_count;
+
+  std::map<std::size_t, const AssemblyBrushPlan*> brush_plan_by_assembly;
+  for (const AssemblyBrushPlan& assembly_brush_plan :
+       brush_planning.assemblies) {
+    brush_plan_by_assembly[assembly_brush_plan.assembly_index] =
+        &assembly_brush_plan;
+  }
 
   std::map<std::size_t, std::size_t> patch_to_assembly;
   for (const PatchAssembly& assembly : topology.assemblies) {
@@ -130,6 +141,14 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
     assembly_plan.patch_indices = assembly.patch_indices;
     assembly_plan.connection_count = assembly.connection_indices.size();
     assembly_plan.unmatched_boundary_spans = assembly.unmatched_boundary_spans;
+    const auto brush_plan = brush_plan_by_assembly.find(assembly.assembly_index);
+    if (brush_plan != brush_plan_by_assembly.end()) {
+      assembly_plan.brush_strategy = brush_plan->second->primary_strategy;
+      assembly_plan.planned_brush_count = brush_plan->second->brushes.size();
+      assembly_plan.invalid_planned_brush_count =
+          brush_plan->second->invalid_brush_count();
+      assembly_plan.lattice = brush_plan->second->lattice;
+    }
     for (std::size_t patch_index : assembly.patch_indices) {
       patch_to_assembly[patch_index] = assembly.assembly_index;
     }
@@ -160,6 +179,9 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
     if (assembly != patch_to_assembly.end()) {
       patch_plan.assembly_index = assembly->second;
       patch_plan.has_assembly = true;
+      patch_plan.brush_strategy =
+          plan.assemblies[patch_plan.assembly_index].brush_strategy;
+      patch_plan.has_brush_strategy = true;
     }
 
     if (!patch.material.empty()) {
@@ -185,12 +207,17 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
           "Patch assembly " + std::to_string(assembly_plan.assembly_index) +
           " is classified as " + assembly_kind_name(assembly_plan.kind) +
           " with " + std::to_string(assembly_plan.patch_indices.size()) +
-          " patch(es).");
+          " patch(es), using " +
+          brush_planning_strategy_name(assembly_plan.brush_strategy) +
+          " planning.");
     }
 
-    patch_plan.notes.push_back(
-        "Geometry strategy will be selected after topology and curvature "
-        "analysis.");
+    if (patch_plan.has_brush_strategy) {
+      patch_plan.notes.push_back(
+          "Brush planning selected " +
+          brush_planning_strategy_name(patch_plan.brush_strategy) +
+          "; writer serialization remains pending.");
+    }
     patch_plan.notes.push_back(
         "Minimum brush thickness setting is " +
         std::to_string(settings_.min_brush_thickness) + " units.");
@@ -198,8 +225,8 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
   }
 
   plan.diagnostics.push_back(
-      "Patch discovery complete. Geometry conversion is scaffolded but not yet "
-      "implemented.");
+      "Patch discovery and brush planning complete. Writer serialization is not "
+      "yet implemented.");
   return plan;
 }
 
@@ -236,6 +263,9 @@ std::string render_markdown_report(const ConversionPlan& plan,
   out << "- Patch topology connections: " << plan.topology_connection_count
       << "\n";
   out << "- Patches skipped by topology: " << plan.skipped_topology_patch_count
+      << "\n";
+  out << "- Planned brushes: " << plan.planned_brush_count << "\n";
+  out << "- Invalid planned brushes: " << plan.invalid_planned_brush_count
       << "\n\n";
 
   if (!plan.diagnostics.empty()) {
@@ -253,10 +283,25 @@ std::string render_markdown_report(const ConversionPlan& plan,
     for (const AssemblyPlan& assembly : plan.assemblies) {
       out << "### Assembly " << assembly.assembly_index << "\n\n";
       out << "- Classification: " << assembly_kind_name(assembly.kind) << "\n";
+      out << "- Brush planning strategy: "
+          << brush_planning_strategy_name(assembly.brush_strategy) << "\n";
       out << "- Patches: " << assembly.patch_indices.size() << "\n";
       out << "- Connections: " << assembly.connection_count << "\n";
       out << "- Unmatched boundary spans: "
-          << assembly.unmatched_boundary_spans << "\n\n";
+          << assembly.unmatched_boundary_spans << "\n";
+      out << "- Planned brushes: " << assembly.planned_brush_count << "\n";
+      out << "- Invalid planned brushes: "
+          << assembly.invalid_planned_brush_count << "\n";
+      out << "- Lattice source quads: " << assembly.lattice.source_quad_count
+          << "\n";
+      out << "- Lattice shared boundary vertices: "
+          << assembly.lattice.shared_boundary_vertex_count << "\n";
+      out << "- Lattice overlapping boundary spans: "
+          << assembly.lattice.overlapping_boundary_span_count << "\n";
+      out << "- Lattice planar merge count: "
+          << assembly.lattice.planar_merge_count << "\n";
+      out << "- Skipped degenerate brush candidates: "
+          << assembly.lattice.skipped_degenerate_brush_count << "\n\n";
     }
   }
 
@@ -271,7 +316,12 @@ std::string render_markdown_report(const ConversionPlan& plan,
         << patch.patch.patch_index << "\n\n";
     out << "- Kind: " << mtb::map::patch_kind_name(patch.patch.kind) << "\n";
     out << "- Source offset: " << patch.patch.keyword_span.start << "\n";
-    out << "- Strategy: " << planned_strategy_name(patch.strategy) << "\n";
+    if (patch.has_brush_strategy) {
+      out << "- Brush strategy: "
+          << brush_planning_strategy_name(patch.brush_strategy) << "\n";
+    } else {
+      out << "- Strategy: " << planned_strategy_name(patch.strategy) << "\n";
+    }
     for (const std::string& note : patch.notes) {
       out << "- Note: " << note << "\n";
     }

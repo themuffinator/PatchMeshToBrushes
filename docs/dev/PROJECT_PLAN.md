@@ -51,6 +51,8 @@ coherent caps, and broad convex pieces where the topology allows it.
    - simple curved charts project from the backface direction
    - closed shells build inward or outward shell sectors depending on intent
    - cylinder-like shapes use radial wedges and aligned caps
+   - arbitrary assemblies use fallback subdivision and merge planar runs where
+     possible
 9. Assign materials:
    - source faces inherit the patch material and a solved texture projection
    - support faces use `textures/common/caulk`
@@ -121,5 +123,7 @@ Planned modes:
 - Adjacent generated brushes share complete edges where possible.
 - Every generated brush belongs to the `func_group` for its source patch or patch
   assembly.
+- Brush planning produces validated in-memory brush plans before writer work
+  serializes any map text.
 - Flat sections never produce support thickness below `8` units by default.
 - Warnings are actionable and include entity and patch indices.

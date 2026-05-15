@@ -47,7 +47,8 @@ Current behavior:
 - `--dry-run` reads the map, parses entities, key/value pairs, existing brush
   blocks, and patch control grids, then prints a planned conversion summary with
   early geometry notes such as planarity, sampling counts, planar UV fit, patch
-  assembly grouping, and coarse topology classification.
+  assembly grouping, coarse topology classification, and in-memory brush planning
+  counts.
 - Non-dry-run conversion returns a "not implemented" diagnostic until the brush
   builder is completed.
 
@@ -60,11 +61,11 @@ check as the project moves beyond the tiny example map.
 
 ## Documentation
 
-- [Project Plan](docs/PROJECT_PLAN.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Brush Construction](docs/BRUSH_CONSTRUCTION.md)
-- [Map Format Notes](docs/MAP_FORMAT.md)
-- [Roadmap](docs/ROADMAP.md)
+- [Project Plan](docs/dev/PROJECT_PLAN.md)
+- [Architecture](docs/dev/ARCHITECTURE.md)
+- [Brush Construction](docs/dev/BRUSH_CONSTRUCTION.md)
+- [Map Format Notes](docs/dev/MAP_FORMAT.md)
+- [Roadmap](docs/dev/ROADMAP.md)
 - [Credits](CREDITS.md)
 
 ## Repository Layout
@@ -77,6 +78,6 @@ src/
   io/           File loading and saving helpers
   map/          Map parser and document model
 tests/          Small baseline tests for the scaffold
-docs/           Planning and implementation notes
+docs/dev/       Technical development notes and roadmap
 examples/       Tiny hand-authored map snippets for development
 ```
