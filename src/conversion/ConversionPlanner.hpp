@@ -39,8 +39,8 @@ struct AssemblyPlan {
 };
 
 struct ConversionPlan {
-  bool preserve_patches = true;
-  bool replace_patches = false;
+  bool preserve_patches = false;
+  bool replace_patches = true;
   std::size_t entity_count = 0;
   std::size_t brush_count = 0;
   std::size_t parser_diagnostic_count = 0;

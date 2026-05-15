@@ -88,7 +88,7 @@ projection. For every source face:
 1. Collect the source surface samples used by the face.
 2. Fit a local plane and tangent basis.
 3. Solve a least-squares mapping from 3D face coordinates to patch UVs.
-4. Convert that mapping to the target `brushDef` texture fields.
+4. Convert that mapping to the target brush texture fields.
 5. Preserve source material name, scale, rotation, and offsets as closely as the
    brush format permits.
 
@@ -97,17 +97,16 @@ texture across a face that no longer represents the patch.
 
 ## Output Policy
 
-Initial implementation should default to preserving patches and appending
-generated brushes behind clear comments. Every generated brush set for a patch
-or patch assembly must be emitted inside a `func_group`; loose generated brushes
-should be treated as invalid output. Once confidence is high, replacing patch
-blocks can become the default.
+Conversion defaults to replacing converted patch blocks with generated brushes
+behind clear comments. Every generated brush set for a patch or patch assembly
+must be emitted inside a `func_group`; loose generated brushes should be treated
+as invalid output. Preserve mode remains available for comparison output.
 
 Phase 5 implements the initial writer path: generated assembly groups are
-appended with stable `PatchMeshToBrushes` comments, preserve mode keeps source
-patch blocks, and replace mode removes converted patch spans before appending
-the groups. Reports include planned group/brush counts and texture projection
-fit diagnostics.
+appended with stable `PatchMeshToBrushes` comments, replace mode removes
+converted patch spans before appending the groups, and preserve mode keeps
+source patch blocks. Reports include planned group/brush counts and texture
+projection fit diagnostics.
 
 Generated `func_group` entities should carry stable comments naming the source
 entity, source patch ids, and patch assembly id. If a patch assembly contains
@@ -117,7 +116,8 @@ Planned modes:
 
 - `--dry-run`: analyze and report only.
 - `--preserve-patches`: keep original patches and append generated brushes.
-- `--replace-patches`: remove converted patches and insert generated brushes.
+- `--replace-patches`: remove converted patches and insert generated brushes
+  (default).
 - `--report <path>`: write a conversion report with patch grouping, strategies,
   warnings, brush counts, and texture fit errors.
 

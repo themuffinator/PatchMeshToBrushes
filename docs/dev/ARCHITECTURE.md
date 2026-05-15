@@ -69,10 +69,11 @@ The core planning and conversion logic. It owns:
 3. `PatchTopologyBuilder` groups patches into connected assemblies.
 4. `BrushPlanner::plan` builds assembly brush plans with segmentation lattice
    summaries, source/support faces, strategy labels, and validation results.
-5. `BrushBuilder::build` turns validated brush plans into grouped `brushDef`
-   map output.
+5. `BrushBuilder::build` turns validated brush plans into grouped map output,
+   matching the source map's legacy or `brushDef` brush style.
 6. The writer appends one generated `func_group` per assembly and removes source
-   patch spans first when `--replace-patches` is active.
+   patch spans by default. `--preserve-patches` keeps the source patches for
+   comparison.
 
 ## Error Model
 

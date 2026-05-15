@@ -90,6 +90,9 @@ int main() {
     require(build.map_text.find("\"classname\" \"func_group\"") !=
                 std::string::npos,
             "generated output is a func_group");
+    require(build.map_text.find("\"_mtb_brush_format\" \"brushDef\"") !=
+                std::string::npos,
+            "patch-only maps use brushDef output");
     require(build.map_text.find("brushDef") != std::string::npos,
             "generated output contains brushDef");
     require(build.map_text.find("textures/test/source") != std::string::npos,
@@ -150,6 +153,27 @@ int main() {
     require(build.map_text.find("\"_mtb_source_patches\" \"0:0 0:1\"") !=
                 std::string::npos,
             "func_group records every source patch in the assembly");
+  }
+
+  {
+    const std::string source =
+        "{\n\"classname\" \"worldspawn\"\n"
+        "  {\n"
+        "    ( 0 0 0 ) ( 0 64 0 ) ( 64 0 0 ) textures/common/caulk 0 0 0 1 1 0 0 0\n"
+        "    ( 0 0 -8 ) ( 64 0 -8 ) ( 0 64 -8 ) textures/common/caulk 0 0 0 1 1 0 0 0\n"
+        "    ( 0 0 0 ) ( 64 0 0 ) ( 0 0 -8 ) textures/common/caulk 0 0 0 1 1 0 0 0\n"
+        "  }\n" +
+        patch_block(0.0, 64.0, 0.0, 64.0) + "}\n";
+    const mtb::conversion::BrushBuildResult build =
+        build_map(source, true);
+
+    require(build.generated_group_count == 1,
+            "legacy source map generates one group");
+    require(build.map_text.find("\"_mtb_brush_format\" \"legacy\"") !=
+                std::string::npos,
+            "legacy source maps receive legacy brush output");
+    require(build.map_text.find("brushDef") == std::string::npos,
+            "legacy source maps do not mix brushDef output");
   }
 
   return 0;

@@ -134,7 +134,7 @@ std::string usage() {
   out << "      --report <path>       Write a markdown conversion report\n";
   out << "      --min-thickness <n>   Minimum flat extrusion thickness, default 8\n";
   out << "      --preserve-patches    Keep source patches and append brushes\n";
-  out << "      --replace-patches     Replace converted patch blocks\n";
+  out << "      --replace-patches     Replace converted patch blocks, default\n";
   out << "      --version             Print version\n";
   out << "  -h, --help                Show this help\n";
   return out.str();

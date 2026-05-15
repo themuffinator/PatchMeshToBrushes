@@ -61,7 +61,8 @@ std::vector<std::string> handcrafted_cases() {
       "{ \"classname\" \"worldspawn\" { patchDef2 { \"textures/fuzz\" "
       "( 3 3 0 0 0 ) ( ( ( 0 0 0 0 ) ) ) } } }",
       "{ \"classname\" \"worldspawn\" // unterminated style bait\n"
-      "{ brushDef { ( 0 0 1 0 ) ( ( 1 0 0 ) ( 0 1 0 ) ) tex 0 0 0 } }",
+      "{ brushDef { ( 0 0 0 ) ( 0 128 0 ) ( 128 0 0 ) "
+      "( ( 1 0 0 ) ( 0 1 0 ) ) tex 0 0 0 } }",
       valid_patch_map() + valid_patch_map(),
   };
 }

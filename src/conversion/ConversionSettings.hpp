@@ -10,8 +10,8 @@ struct ConversionSettings {
   double min_face_area = 0.01;
   double brush_plan_chord_error = 8.0;
   int brush_plan_max_depth = 4;
-  bool preserve_patches = true;
-  bool replace_patches = false;
+  bool preserve_patches = false;
+  bool replace_patches = true;
 };
 
 }  // namespace mtb::conversion

@@ -12,6 +12,8 @@ int main() {
     assert(result.options.input_path == "input.map");
     assert(result.options.dry_run);
     assert(result.options.min_thickness == 8.0);
+    assert(result.options.replace_patches);
+    assert(!result.options.preserve_patches);
   }
 
   {
@@ -24,6 +26,14 @@ int main() {
     assert(result.options.min_thickness == 12.5);
     assert(result.options.replace_patches);
     assert(!result.options.preserve_patches);
+  }
+
+  {
+    const mtb::cli::ParseResult result =
+        mtb::cli::parse_arguments({"input.map", "--preserve-patches"});
+    assert(result.errors.empty());
+    assert(result.options.preserve_patches);
+    assert(!result.options.replace_patches);
   }
 
   {

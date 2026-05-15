@@ -46,7 +46,7 @@
 
 ## Phase 5: Writer and Reports
 
-- [x] Emit valid `brushDef` blocks.
+- [x] Emit valid brush blocks matching the source map format.
 - [x] Wrap every generated patch or patch-assembly brush set in a `func_group`.
 - [x] Preserve or replace patch blocks based on CLI mode.
 - [x] Write conversion reports.

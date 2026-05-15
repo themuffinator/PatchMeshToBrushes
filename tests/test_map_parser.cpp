@@ -27,7 +27,7 @@ int main() {
   {
     brushDef
     {
-      ( 0 0 1 8 ) ( ( 1 0 0 ) ( 0 1 0 ) ) textures/common/caulk 0 0 0
+      ( 0 0 8 ) ( 0 128 8 ) ( 128 0 8 ) ( ( 1 0 0 ) ( 0 1 0 ) ) textures/common/caulk 0 0 0
     }
   }
   {

@@ -13,8 +13,8 @@ struct Options {
   std::optional<std::filesystem::path> report_path;
   double min_thickness = 8.0;
   bool dry_run = false;
-  bool preserve_patches = true;
-  bool replace_patches = false;
+  bool preserve_patches = false;
+  bool replace_patches = true;
   bool show_help = false;
   bool show_version = false;
 };

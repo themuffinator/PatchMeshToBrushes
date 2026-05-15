@@ -7,13 +7,14 @@ map editor.
 
 It is designed for mapper-friendly output:
 
-- curved patch meshes become convex `brushDef` brushes
+- curved patch meshes become convex brushes
 - each converted patch or patch set is placed in a `func_group`
+- generated brush syntax matches the source map's brush style
 - visible faces keep the patch material where possible
 - hidden support faces use `textures/common/caulk`
 - flat sections keep at least `8` units of thickness
-- generated output can be kept beside the original patches or replace them in a
-  copy of the map
+- generated output replaces patch meshes by default, with an option to keep the
+  original patches for comparison
 
 ## Getting Started
 
@@ -62,15 +63,15 @@ patch-mesh-to-brushes my_map.map -o my_map_brushes.map
 ```
 
 The converted brushes are added in new `func_group` objects, and the original
-patch meshes are kept.
+patch meshes are removed from the output file.
 
-### Replace Patch Meshes In The Output Copy
+### Keep Patch Meshes In The Output Copy
 
-Use this when you want the new file to contain brushes instead of the original
-patch meshes:
+Use this when you want the new file to contain both the original patch meshes
+and the generated brush groups:
 
 ```powershell
-patch-mesh-to-brushes my_map.map -o my_map_brushes.map --replace-patches
+patch-mesh-to-brushes my_map.map -o my_map_brushes.map --preserve-patches
 ```
 
 This changes only the output file you choose with `-o`.
@@ -92,8 +93,8 @@ how many brushes were created.
 | --- | --- |
 | `--dry-run` | Shows what would happen without writing a map. |
 | `-o, --output <path>` | Writes the converted map to this path. |
-| `--preserve-patches` | Keeps original patch meshes and adds brush groups. This is the default. |
-| `--replace-patches` | Removes converted patch meshes from the output file. |
+| `--preserve-patches` | Keeps original patch meshes and adds brush groups. |
+| `--replace-patches` | Removes converted patch meshes from the output file. This is the default. |
 | `--report <path>` | Writes a conversion report. |
 | `--min-thickness <number>` | Sets the minimum thickness for flat brush sections. The default is `8`. |
 | `--version` | Prints the tool version. |

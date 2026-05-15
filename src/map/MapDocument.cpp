@@ -486,12 +486,35 @@ class MapParser {
         break;
       }
 
-      if (token.kind == TokenKind::OpenParen && consume_numeric_group(cursor, 4)) {
+      if (token.kind == TokenKind::OpenParen &&
+          consume_brush_def_plane(cursor)) {
         ++face_count;
       }
     }
 
     return face_count;
+  }
+
+  bool consume_brush_def_plane(TokenCursor& cursor) const {
+    const std::size_t after_first_open = cursor.position();
+    if (consume_numeric_group(cursor, 4)) {
+      return true;
+    }
+
+    cursor.set_position(after_first_open);
+    if (!consume_numeric_group(cursor, 3)) {
+      return false;
+    }
+
+    for (int point_index = 1; point_index < 3; ++point_index) {
+      const Token open = cursor.next();
+      if (open.kind != TokenKind::OpenParen ||
+          !consume_numeric_group(cursor, 3)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   bool consume_numeric_group(TokenCursor& cursor, std::size_t expected) const {

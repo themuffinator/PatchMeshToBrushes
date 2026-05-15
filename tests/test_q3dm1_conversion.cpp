@@ -58,6 +58,13 @@ int main(int argc, char** argv) {
   require(replace.generated_brush_count == 2440,
           "replace generated brush count");
   require(replace.replaced_patch_count == 113, "replace removes source patches");
+  require(replace.map_text.find("patchDef2") == std::string::npos,
+          "replace output text contains no patchDef2 blocks");
+  require(replace.map_text.find("brushDef") == std::string::npos,
+          "q3dm1 legacy brush map does not receive mixed brushDef output");
+  require(replace.map_text.find("\"_mtb_brush_format\" \"legacy\"") !=
+              std::string::npos,
+          "q3dm1 generated groups record legacy brush output");
   const mtb::map::MapDocument replace_output =
       mtb::map::MapDocument::parse(replace.map_text);
   require(replace_output.diagnostics().empty(), "replace output parses");

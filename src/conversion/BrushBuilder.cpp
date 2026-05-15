@@ -1,6 +1,7 @@
 #include "conversion/BrushBuilder.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <iomanip>
@@ -19,6 +20,12 @@ constexpr std::string_view kGeneratedGroupBegin =
 constexpr std::string_view kGeneratedGroupEnd = "// PatchMeshToBrushes end";
 constexpr std::string_view kLegacyGeneratedGroupBegin = "// MeshToBrushes begin:";
 constexpr std::string_view kLegacyGeneratedGroupEnd = "// MeshToBrushes end";
+constexpr double kPlanePointSpan = 128.0;
+
+enum class BrushWriteFormat {
+  BrushDef,
+  Legacy,
+};
 
 std::string format_double(double value) {
   if (std::abs(value) < 0.0000005) {
@@ -142,6 +149,32 @@ void write_texture_projection(std::ostream& out, const PlannedFace& face) {
       << " 0 0 ) ( 0 " << format_double(kDefaultTextureScale) << " 0 ) )";
 }
 
+std::array<mtb::geometry::Vec3, 3> plane_points(
+    const mtb::geometry::Plane& input_plane) {
+  // Q3 brush planes are serialized as three points; this order preserves the
+  // plane normal expected by q3map's point-plane parser.
+  const mtb::geometry::Plane plane = mtb::geometry::normalized_plane(input_plane);
+  const mtb::geometry::Vec3 anchor = plane.normal * plane.distance;
+  const mtb::geometry::Vec3 reference =
+      std::abs(plane.normal.z) < 0.9 ? mtb::geometry::Vec3{0.0, 0.0, 1.0}
+                                     : mtb::geometry::Vec3{0.0, 1.0, 0.0};
+  const mtb::geometry::Vec3 tangent_u =
+      mtb::geometry::normalized(mtb::geometry::cross(reference, plane.normal));
+  const mtb::geometry::Vec3 tangent_v =
+      mtb::geometry::cross(plane.normal, tangent_u);
+
+  return {
+      anchor,
+      anchor + tangent_v * kPlanePointSpan,
+      anchor + tangent_u * kPlanePointSpan,
+  };
+}
+
+void write_point(std::ostream& out, const mtb::geometry::Vec3& point) {
+  out << "( " << format_double(point.x) << " " << format_double(point.y) << " "
+      << format_double(point.z) << " )";
+}
+
 void write_brush_def(std::ostream& out, const PlannedBrush& brush) {
   out << "  {\n";
   out << "    brushDef\n";
@@ -150,12 +183,15 @@ void write_brush_def(std::ostream& out, const PlannedBrush& brush) {
   for (const PlannedFace& face : brush.faces) {
     const std::string material =
         face.material.empty() ? "textures/common/caulk" : face.material;
-    const mtb::geometry::Plane plane =
-        mtb::geometry::normalized_plane(face.plane);
-    out << "      ( " << format_double(plane.normal.x) << " "
-        << format_double(plane.normal.y) << " "
-        << format_double(plane.normal.z) << " "
-        << format_double(plane.distance) << " ) ";
+    const std::array<mtb::geometry::Vec3, 3> points =
+        plane_points(face.plane);
+    out << "      ";
+    write_point(out, points[0]);
+    out << " ";
+    write_point(out, points[1]);
+    out << " ";
+    write_point(out, points[2]);
+    out << " ";
     write_texture_projection(out, face);
     out << " " << material << " 0 0 0\n";
   }
@@ -164,9 +200,51 @@ void write_brush_def(std::ostream& out, const PlannedBrush& brush) {
   out << "  }\n";
 }
 
+void write_legacy_brush(std::ostream& out, const PlannedBrush& brush) {
+  out << "  {\n";
+
+  for (const PlannedFace& face : brush.faces) {
+    const std::string material =
+        face.material.empty() ? "textures/common/caulk" : face.material;
+    const std::array<mtb::geometry::Vec3, 3> points =
+        plane_points(face.plane);
+    out << "    ";
+    write_point(out, points[0]);
+    out << " ";
+    write_point(out, points[1]);
+    out << " ";
+    write_point(out, points[2]);
+    out << " " << material << " 0 0 0 1 1 0 0 0\n";
+  }
+
+  out << "  }\n";
+}
+
+BrushWriteFormat output_format_for(const mtb::map::MapDocument& document) {
+  for (const mtb::map::BrushSummary& brush : document.brushes()) {
+    if (!brush.uses_brush_def) {
+      return BrushWriteFormat::Legacy;
+    }
+  }
+
+  return BrushWriteFormat::BrushDef;
+}
+
+std::string format_name(BrushWriteFormat format) {
+  switch (format) {
+    case BrushWriteFormat::BrushDef:
+      return "brushDef";
+    case BrushWriteFormat::Legacy:
+      return "legacy";
+  }
+
+  return "unknown";
+}
+
 std::string write_assembly_group(const AssemblyBrushPlan& assembly,
                                  const mtb::map::MapDocument& document,
-                                 BrushBuildResult& result) {
+                                 BrushBuildResult& result,
+                                 BrushWriteFormat format) {
   std::ostringstream out;
   const std::string source_patches =
       join_source_patch_tokens(assembly.patch_indices, document);
@@ -183,6 +261,7 @@ std::string write_assembly_group(const AssemblyBrushPlan& assembly,
   out << "\"_mtb_assembly\" \"" << assembly.assembly_index << "\"\n";
   out << "\"_mtb_strategy\" \""
       << brush_planning_strategy_name(assembly.primary_strategy) << "\"\n";
+  out << "\"_mtb_brush_format\" \"" << format_name(format) << "\"\n";
   out << "\"_mtb_source_entities\" \"" << escape_entity_value(source_entities)
       << "\"\n";
   out << "\"_mtb_source_patches\" \"" << escape_entity_value(source_patches)
@@ -197,7 +276,11 @@ std::string write_assembly_group(const AssemblyBrushPlan& assembly,
       continue;
     }
 
-    write_brush_def(out, brush);
+    if (format == BrushWriteFormat::Legacy) {
+      write_legacy_brush(out, brush);
+    } else {
+      write_brush_def(out, brush);
+    }
     ++result.generated_brush_count;
   }
 
@@ -317,6 +400,7 @@ BrushBuildResult BrushBuilder::build(const mtb::map::MapDocument& document,
                                      const ConversionPlan& plan) const {
   BrushBuildResult result;
   std::vector<std::string> groups;
+  const BrushWriteFormat output_format = output_format_for(document);
   const std::vector<mtb::map::SourceSpan> existing_group_spans =
       existing_generated_group_spans(document.source());
   std::vector<mtb::map::SourceSpan> spans_to_remove = existing_group_spans;
@@ -327,11 +411,12 @@ BrushBuildResult BrushBuilder::build(const mtb::map::MapDocument& document,
     if (!has_writable_brushes(assembly)) {
       result.diagnostics.push_back(
           "Assembly " + std::to_string(assembly.assembly_index) +
-          " did not produce any valid brushDef output.");
+          " did not produce any valid brush output.");
       continue;
     }
 
-    groups.push_back(write_assembly_group(assembly, document, result));
+    groups.push_back(
+        write_assembly_group(assembly, document, result, output_format));
     ++result.generated_group_count;
     for (std::size_t patch_index : assembly.patch_indices) {
       if (patch_index < document.patches().size() &&

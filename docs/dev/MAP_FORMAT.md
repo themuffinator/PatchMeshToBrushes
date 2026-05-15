@@ -24,9 +24,19 @@ diagnostics so dry-run analysis can continue across the rest of the map.
 
 ## Brush Output
 
-The target output is convex `brushDef` data. Each brush must describe a valid
-closed convex polyhedron. Faces that approximate the source patch carry the
-source texture projection; support faces are caulked.
+The target output is convex brush data. Each brush must describe a valid closed
+convex polyhedron. Faces that approximate the source patch carry the source
+texture projection; support faces are caulked.
+
+Quake III `brushDef` faces are emitted with three point plane definitions,
+followed by the brush primitive texture matrix. The normal/distance plane form
+belongs to later `brushDef3`-style formats and must not be used for Q3-era
+`brushDef` output.
+
+Quake III tooling treats legacy brush faces and `brushDef` brush primitives as a
+map-wide brush mode. Generated groups therefore match the source map's existing
+brush style: old-brush maps receive old-brush output, and brush primitive maps
+receive `brushDef` output.
 
 Generated brushes are not written as loose top-level world brushes. All brushes
 covering a single patch mesh, or a grouped set of related patch meshes, must be
@@ -34,9 +44,9 @@ contained in one `func_group` entity so the result remains a coherent editable
 unit.
 
 Phase 5 emits generated groups after the preserved or rewritten source map. In
-preserve mode, source patch primitives stay untouched. In replace mode, only the
-converted patch primitive spans are removed before the generated groups are
-appended. Existing `PatchMeshToBrushes` generated groups are removed before new
+replace mode, only the converted patch primitive spans are removed before the
+generated groups are appended. In preserve mode, source patch primitives stay
+untouched. Existing `PatchMeshToBrushes` generated groups are removed before new
 groups are appended so repeated runs do not accumulate duplicate output.
 
 ## Comments and Formatting
