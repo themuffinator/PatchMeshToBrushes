@@ -219,6 +219,15 @@ PlannedFace make_face(std::vector<geometry::Vec3> vertices, PlannedFaceRole role
   return face;
 }
 
+std::vector<geometry::UvSample> source_uv_samples(const SurfaceCell& cell) {
+  std::vector<geometry::UvSample> samples;
+  samples.reserve(cell.corners.size());
+  for (const geometry::SurfaceSample& corner : cell.corners) {
+    samples.push_back({corner.position, corner.uv});
+  }
+  return samples;
+}
+
 PlannedBrush make_prism_brush(
     const SurfaceCell& cell, const std::array<geometry::Vec3, 4>& back,
     const mtb::map::PatchSummary& patch, std::size_t patch_index,
@@ -233,9 +242,15 @@ PlannedBrush make_prism_brush(
   PlannedBrush brush;
   brush.strategy = strategy;
   brush.source_patch_indices.push_back(patch_index);
-  brush.faces.push_back(make_face({front[0], front[1], front[2], front[3]},
-                                  PlannedFaceRole::SourceSurface,
-                                  patch.material, patch_index, true));
+  PlannedFace source_face =
+      make_face({front[0], front[1], front[2], front[3]},
+                PlannedFaceRole::SourceSurface, patch.material, patch_index,
+                true);
+  source_face.uv_samples = source_uv_samples(cell);
+  source_face.uv_projection =
+      geometry::fit_planar_uv_projection(source_face.uv_samples);
+  source_face.has_uv_projection = source_face.uv_projection.valid;
+  brush.faces.push_back(std::move(source_face));
   brush.faces.push_back(make_face({back[3], back[2], back[1], back[0]},
                                   PlannedFaceRole::Support, kCaulkMaterial,
                                   patch_index, false));
@@ -455,6 +470,26 @@ void append_patch_brushes(AssemblyBrushPlan& plan,
   }
 }
 
+void add_texture_projection_metrics(AssemblyBrushPlan& plan) {
+  for (const PlannedBrush& brush : plan.brushes) {
+    for (const PlannedFace& face : brush.faces) {
+      if (face.role != PlannedFaceRole::SourceSurface) {
+        continue;
+      }
+
+      ++plan.lattice.source_face_count;
+      if (face.has_uv_projection) {
+        ++plan.lattice.texture_projection_count;
+        plan.lattice.max_texture_projection_error =
+            std::max(plan.lattice.max_texture_projection_error,
+                     face.uv_projection.max_error);
+      } else {
+        ++plan.lattice.invalid_texture_projection_count;
+      }
+    }
+  }
+}
+
 }  // namespace
 
 BrushPlanner::BrushPlanner(ConversionSettings settings)
@@ -500,6 +535,7 @@ BrushPlanningResult BrushPlanner::plan(
     }
 
     assembly_plan.lattice.planned_brush_count = assembly_plan.brushes.size();
+    add_texture_projection_metrics(assembly_plan);
     for (const PlannedBrush& brush : assembly_plan.brushes) {
       ++result.total_brush_count;
       if (!brush.valid) {

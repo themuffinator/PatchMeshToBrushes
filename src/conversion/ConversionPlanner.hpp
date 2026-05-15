@@ -39,6 +39,8 @@ struct AssemblyPlan {
 };
 
 struct ConversionPlan {
+  bool preserve_patches = true;
+  bool replace_patches = false;
   std::size_t entity_count = 0;
   std::size_t brush_count = 0;
   std::size_t parser_diagnostic_count = 0;
@@ -47,6 +49,7 @@ struct ConversionPlan {
   std::size_t planned_brush_count = 0;
   std::size_t invalid_planned_brush_count = 0;
   std::vector<AssemblyPlan> assemblies;
+  std::vector<AssemblyBrushPlan> brush_assemblies;
   std::vector<PatchPlan> patches;
   std::vector<std::string> diagnostics;
 };

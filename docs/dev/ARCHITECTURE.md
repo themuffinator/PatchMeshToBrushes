@@ -27,10 +27,11 @@ should retain:
 - patch blocks and their source spans
 - comments and unrelated source text where practical
 
-The Phase 1 parser preserves the original source text and records parsed
+The parser preserves the original source text and records parsed
 entities, entity key/value pairs, existing brush spans, patch source spans,
-materials, dimensions, and control points. Comments and unrelated text are not
-rewritten yet; future writer work should use source spans for stable edits.
+materials, dimensions, and control points. The writer uses those source spans to
+remove converted patch primitives in replace mode while leaving unrelated text
+intact.
 
 ### `src/geometry`
 
@@ -65,13 +66,13 @@ The core planning and conversion logic. It owns:
 
 1. `MapDocument::parse` loads the source and records patch spans.
 2. `ConversionPlanner::plan` turns parsed patches into patch-level analysis.
-3. A future `AssemblyBuilder` groups patches into connected assemblies.
+3. `PatchTopologyBuilder` groups patches into connected assemblies.
 4. `BrushPlanner::plan` builds assembly brush plans with segmentation lattice
    summaries, source/support faces, strategy labels, and validation results.
-5. `BrushBuilder::build` will turn validated brush plans into grouped map
-   output.
-6. A future `MapWriter` inserts each generated assembly as a `func_group` in the
-   original document.
+5. `BrushBuilder::build` turns validated brush plans into grouped `brushDef`
+   map output.
+6. The writer appends one generated `func_group` per assembly and removes source
+   patch spans first when `--replace-patches` is active.
 
 ## Error Model
 

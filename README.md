@@ -5,9 +5,9 @@ MeshToBrushes is planned as a command line converter for Quake III Arena era
 mesh in the input map and replace or accompany those curved surfaces with a
 carefully planned set of convex `brushDef` brushes.
 
-The project has a compilable CLI shell, a preserving map parser, conversion
-planning stubs, tests, and documentation for the geometry strategy. The actual
-brush emission engine is intentionally not presented as complete yet.
+The project has a compilable CLI, a preserving map parser, patch assembly
+analysis, in-memory brush planning, grouped brush emission, tests, and
+documentation for the geometry strategy.
 
 ## Goals
 
@@ -49,8 +49,12 @@ Current behavior:
   early geometry notes such as planarity, sampling counts, planar UV fit, patch
   assembly grouping, coarse topology classification, and in-memory brush planning
   counts.
-- Non-dry-run conversion returns a "not implemented" diagnostic until the brush
-  builder is completed.
+- Non-dry-run conversion emits generated `brushDef` brushes inside one
+  `func_group` per patch assembly. By default it preserves source patches and
+  appends the groups; `--replace-patches` removes converted source patch blocks
+  before appending the generated groups.
+- `--report` writes patch grouping, brush strategy, brush counts, and texture
+  projection fit diagnostics.
 
 ## Test Fixtures
 

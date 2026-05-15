@@ -33,6 +33,12 @@ covering a single patch mesh, or a grouped set of related patch meshes, must be
 contained in one `func_group` entity so the result remains a coherent editable
 unit.
 
+Phase 5 emits generated groups after the preserved or rewritten source map. In
+preserve mode, source patch primitives stay untouched. In replace mode, only the
+converted patch primitive spans are removed before the generated groups are
+appended. Existing `MeshToBrushes` generated groups are removed before new
+groups are appended so repeated runs do not accumulate duplicate output.
+
 ## Comments and Formatting
 
 The writer should insert generated content with stable comments:
@@ -41,6 +47,8 @@ The writer should insert generated content with stable comments:
 // MeshToBrushes begin: source entity 0 patch assembly 3
 {
 "classname" "func_group"
+"_mtb_assembly" "3"
+"_mtb_source_patches" "0:4 0:5"
 ...
 }
 // MeshToBrushes end

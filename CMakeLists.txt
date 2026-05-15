@@ -72,11 +72,23 @@ if(MTB_BUILD_TESTS)
   target_link_libraries(test_brush_planner PRIVATE mtb_core)
   add_test(NAME brush_planner COMMAND test_brush_planner)
 
+  add_executable(test_brush_builder tests/test_brush_builder.cpp)
+  target_link_libraries(test_brush_builder PRIVATE mtb_core)
+  add_test(NAME brush_builder COMMAND test_brush_builder)
+
   add_executable(test_q3dm1_fixture tests/test_q3dm1_fixture.cpp)
   target_link_libraries(test_q3dm1_fixture PRIVATE mtb_core)
   add_test(
     NAME q3dm1_fixture
     COMMAND test_q3dm1_fixture
+      "${PROJECT_SOURCE_DIR}/tests/map/q3dm1sample.map"
+  )
+
+  add_executable(test_q3dm1_conversion tests/test_q3dm1_conversion.cpp)
+  target_link_libraries(test_q3dm1_conversion PRIVATE mtb_core)
+  add_test(
+    NAME q3dm1_conversion
+    COMMAND test_q3dm1_conversion
       "${PROJECT_SOURCE_DIR}/tests/map/q3dm1sample.map"
   )
 endif()

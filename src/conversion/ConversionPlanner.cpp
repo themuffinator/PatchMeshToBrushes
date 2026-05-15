@@ -4,6 +4,7 @@
 #include "geometry/PlaneFit.hpp"
 #include "geometry/UvProjection.hpp"
 
+#include <algorithm>
 #include <exception>
 #include <iomanip>
 #include <map>
@@ -113,6 +114,8 @@ ConversionPlanner::ConversionPlanner(ConversionSettings settings)
 
 ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) const {
   ConversionPlan plan;
+  plan.preserve_patches = settings_.preserve_patches;
+  plan.replace_patches = settings_.replace_patches;
   plan.entity_count = document.entities().size();
   plan.brush_count = document.brushes().size();
   plan.parser_diagnostic_count = document.diagnostics().size();
@@ -125,6 +128,7 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
   plan.skipped_topology_patch_count = topology.skipped_patch_indices.size();
   plan.planned_brush_count = brush_planning.total_brush_count;
   plan.invalid_planned_brush_count = brush_planning.invalid_brush_count;
+  plan.brush_assemblies = brush_planning.assemblies;
 
   std::map<std::size_t, const AssemblyBrushPlan*> brush_plan_by_assembly;
   for (const AssemblyBrushPlan& assembly_brush_plan :
@@ -216,7 +220,8 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
       patch_plan.notes.push_back(
           "Brush planning selected " +
           brush_planning_strategy_name(patch_plan.brush_strategy) +
-          "; writer serialization remains pending.");
+          "; writer output will place the generated brushes in the assembly "
+          "func_group.");
     }
     patch_plan.notes.push_back(
         "Minimum brush thickness setting is " +
@@ -225,8 +230,7 @@ ConversionPlan ConversionPlanner::plan(const mtb::map::MapDocument& document) co
   }
 
   plan.diagnostics.push_back(
-      "Patch discovery and brush planning complete. Writer serialization is not "
-      "yet implemented.");
+      "Patch discovery, brush planning, and writer planning complete.");
   return plan;
 }
 
@@ -244,6 +248,20 @@ std::string planned_strategy_name(PlannedStrategy strategy) {
 std::string render_markdown_report(const ConversionPlan& plan,
                                    const ConversionSettings& settings) {
   std::ostringstream out;
+  std::size_t source_face_count = 0;
+  std::size_t texture_projection_count = 0;
+  std::size_t invalid_texture_projection_count = 0;
+  double max_texture_projection_error = 0.0;
+  for (const AssemblyPlan& assembly : plan.assemblies) {
+    source_face_count += assembly.lattice.source_face_count;
+    texture_projection_count += assembly.lattice.texture_projection_count;
+    invalid_texture_projection_count +=
+        assembly.lattice.invalid_texture_projection_count;
+    max_texture_projection_error =
+        std::max(max_texture_projection_error,
+                 assembly.lattice.max_texture_projection_error);
+  }
+
   out << "# MeshToBrushes Conversion Report\n\n";
   out << "## Settings\n\n";
   out << "- Minimum brush thickness: " << settings.min_brush_thickness << "\n";
@@ -264,8 +282,16 @@ std::string render_markdown_report(const ConversionPlan& plan,
       << "\n";
   out << "- Patches skipped by topology: " << plan.skipped_topology_patch_count
       << "\n";
+  out << "- Planned func_groups: " << plan.brush_assemblies.size() << "\n";
   out << "- Planned brushes: " << plan.planned_brush_count << "\n";
   out << "- Invalid planned brushes: " << plan.invalid_planned_brush_count
+      << "\n";
+  out << "- Source faces: " << source_face_count << "\n";
+  out << "- Texture projections: " << texture_projection_count << "\n";
+  out << "- Invalid texture projections: "
+      << invalid_texture_projection_count << "\n";
+  out << "- Max texture projection fit error: "
+      << format_double(max_texture_projection_error)
       << "\n\n";
 
   if (!plan.diagnostics.empty()) {
@@ -301,7 +327,15 @@ std::string render_markdown_report(const ConversionPlan& plan,
       out << "- Lattice planar merge count: "
           << assembly.lattice.planar_merge_count << "\n";
       out << "- Skipped degenerate brush candidates: "
-          << assembly.lattice.skipped_degenerate_brush_count << "\n\n";
+          << assembly.lattice.skipped_degenerate_brush_count << "\n";
+      out << "- Source faces: " << assembly.lattice.source_face_count << "\n";
+      out << "- Texture projections: "
+          << assembly.lattice.texture_projection_count << "\n";
+      out << "- Invalid texture projections: "
+          << assembly.lattice.invalid_texture_projection_count << "\n";
+      out << "- Max texture projection fit error: "
+          << format_double(assembly.lattice.max_texture_projection_error)
+          << "\n\n";
     }
   }
 

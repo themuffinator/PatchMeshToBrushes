@@ -3,6 +3,7 @@
 #include "conversion/ConversionSettings.hpp"
 #include "conversion/PatchTopology.hpp"
 #include "geometry/Plane.hpp"
+#include "geometry/UvProjection.hpp"
 #include "map/MapDocument.hpp"
 
 #include <cstddef>
@@ -27,11 +28,14 @@ enum class PlannedFaceRole {
 
 struct PlannedFace {
   std::vector<geometry::Vec3> vertices;
+  std::vector<geometry::UvSample> uv_samples;
   geometry::Plane plane;
+  geometry::PlanarUvProjection uv_projection;
   PlannedFaceRole role = PlannedFaceRole::Support;
   std::string material = "textures/common/caulk";
   std::size_t source_patch_index = 0;
   bool has_source_patch = false;
+  bool has_uv_projection = false;
 };
 
 struct PlannedBrush {
@@ -51,6 +55,10 @@ struct SegmentationLattice {
   std::size_t overlapping_boundary_span_count = 0;
   std::size_t planar_merge_count = 0;
   std::size_t skipped_degenerate_brush_count = 0;
+  std::size_t source_face_count = 0;
+  std::size_t texture_projection_count = 0;
+  std::size_t invalid_texture_projection_count = 0;
+  double max_texture_projection_error = 0.0;
 };
 
 struct AssemblyBrushPlan {

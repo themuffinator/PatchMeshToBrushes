@@ -108,9 +108,14 @@ int main(int argc, char** argv) {
     for (const std::string& diagnostic : build.diagnostics) {
       std::cerr << "diagnostic: " << diagnostic << "\n";
     }
+    std::cout << "Generated func_groups: " << build.generated_group_count << "\n";
+    std::cout << "Generated brushes: " << build.generated_brush_count << "\n";
+    if (settings.replace_patches) {
+      std::cout << "Replaced patches: " << build.replaced_patch_count << "\n";
+    }
 
     if (!build.implemented) {
-      std::cerr << "error: conversion output is not implemented yet; rerun with "
+      std::cerr << "error: conversion output could not be produced; rerun with "
                    "--dry-run for analysis only\n";
       return 2;
     }
