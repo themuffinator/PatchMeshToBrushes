@@ -3,7 +3,7 @@
 #include "conversion/ConversionPlanner.hpp"
 #include "io/FileSystem.hpp"
 #include "map/MapDocument.hpp"
-#include "MeshToBrushesVersion.hpp"
+#include "PatchMeshToBrushesVersion.hpp"
 
 #include <exception>
 #include <filesystem>

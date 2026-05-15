@@ -14,8 +14,11 @@ namespace mtb::conversion {
 namespace {
 
 constexpr double kDefaultTextureScale = 1.0 / 32.0;
-constexpr std::string_view kGeneratedGroupBegin = "// MeshToBrushes begin:";
-constexpr std::string_view kGeneratedGroupEnd = "// MeshToBrushes end";
+constexpr std::string_view kGeneratedGroupBegin =
+    "// PatchMeshToBrushes begin:";
+constexpr std::string_view kGeneratedGroupEnd = "// PatchMeshToBrushes end";
+constexpr std::string_view kLegacyGeneratedGroupBegin = "// MeshToBrushes begin:";
+constexpr std::string_view kLegacyGeneratedGroupEnd = "// MeshToBrushes end";
 
 std::string format_double(double value) {
   if (std::abs(value) < 0.0000005) {
@@ -170,9 +173,9 @@ std::string write_assembly_group(const AssemblyBrushPlan& assembly,
   const std::string source_entities =
       join_source_entity_indices(assembly.patch_indices, document);
 
-  out << "// MeshToBrushes begin: source patch assembly "
+  out << "// PatchMeshToBrushes begin: source patch assembly "
       << assembly.assembly_index << "\n";
-  out << "// MeshToBrushes source patches: "
+  out << "// PatchMeshToBrushes source patches: "
       << join_source_patch_descriptions(assembly.patch_indices, document)
       << "\n";
   out << "{\n";
@@ -184,7 +187,7 @@ std::string write_assembly_group(const AssemblyBrushPlan& assembly,
       << "\"\n";
   out << "\"_mtb_source_patches\" \"" << escape_entity_value(source_patches)
       << "\"\n";
-  out << "\"_mtb_generated_by\" \"MeshToBrushes\"\n";
+  out << "\"_mtb_generated_by\" \"PatchMeshToBrushes\"\n";
 
   for (const PlannedBrush& brush : assembly.brushes) {
     if (!brush.valid) {
@@ -199,7 +202,7 @@ std::string write_assembly_group(const AssemblyBrushPlan& assembly,
   }
 
   out << "}\n";
-  out << "// MeshToBrushes end: source patch assembly "
+  out << "// PatchMeshToBrushes end: source patch assembly "
       << assembly.assembly_index << "\n";
   return out.str();
 }
@@ -227,43 +230,50 @@ std::string remove_spans(std::string_view source,
 
 std::vector<mtb::map::SourceSpan> existing_generated_group_spans(
     std::string_view source) {
+  const auto collect_spans =
+      [&](std::string_view begin_marker, std::string_view end_marker,
+          std::vector<mtb::map::SourceSpan>& raw_spans) {
+        std::size_t search_from = 0;
+        while (true) {
+          const std::size_t begin = source.find(begin_marker, search_from);
+          if (begin == std::string_view::npos) {
+            break;
+          }
+
+          const std::size_t end_marker_offset = source.find(end_marker, begin);
+          if (end_marker_offset == std::string_view::npos) {
+            search_from = begin + begin_marker.size();
+            continue;
+          }
+
+          std::size_t start = begin;
+          while (start > 0 &&
+                 std::isspace(static_cast<unsigned char>(source[start - 1]))) {
+            --start;
+          }
+          if (start < begin) {
+            if (source[start] == '\r' && start + 1 < begin &&
+                source[start + 1] == '\n') {
+              start += 2;
+            } else if (source[start] == '\r' || source[start] == '\n') {
+              ++start;
+            }
+          }
+
+          std::size_t end = source.find('\n', end_marker_offset);
+          end = end == std::string_view::npos ? source.size() : end + 1;
+          while (end < source.size() &&
+                 std::isspace(static_cast<unsigned char>(source[end]))) {
+            ++end;
+          }
+          raw_spans.push_back({start, end});
+          search_from = end;
+        }
+      };
+
   std::vector<mtb::map::SourceSpan> raw_spans;
-  std::size_t search_from = 0;
-  while (true) {
-    const std::size_t begin = source.find(kGeneratedGroupBegin, search_from);
-    if (begin == std::string_view::npos) {
-      break;
-    }
-
-    const std::size_t end_marker = source.find(kGeneratedGroupEnd, begin);
-    if (end_marker == std::string_view::npos) {
-      search_from = begin + kGeneratedGroupBegin.size();
-      continue;
-    }
-
-    std::size_t start = begin;
-    while (start > 0 &&
-           std::isspace(static_cast<unsigned char>(source[start - 1]))) {
-      --start;
-    }
-    if (start < begin) {
-      if (source[start] == '\r' && start + 1 < begin &&
-          source[start + 1] == '\n') {
-        start += 2;
-      } else if (source[start] == '\r' || source[start] == '\n') {
-        ++start;
-      }
-    }
-
-    std::size_t end = source.find('\n', end_marker);
-    end = end == std::string_view::npos ? source.size() : end + 1;
-    while (end < source.size() &&
-           std::isspace(static_cast<unsigned char>(source[end]))) {
-      ++end;
-    }
-    raw_spans.push_back({start, end});
-    search_from = end;
-  }
+  collect_spans(kGeneratedGroupBegin, kGeneratedGroupEnd, raw_spans);
+  collect_spans(kLegacyGeneratedGroupBegin, kLegacyGeneratedGroupEnd, raw_spans);
 
   std::sort(raw_spans.begin(), raw_spans.end(),
             [](const mtb::map::SourceSpan& lhs,
@@ -345,7 +355,7 @@ BrushBuildResult BrushBuilder::build(const mtb::map::MapDocument& document,
   if (!existing_group_spans.empty()) {
     result.diagnostics.push_back(
         "Removed " + std::to_string(existing_group_spans.size()) +
-        " previous MeshToBrushes generated func_group block(s).");
+        " previous PatchMeshToBrushes generated func_group block(s).");
   }
   if (plan.preserve_patches && !plan.replace_patches) {
     result.diagnostics.push_back(

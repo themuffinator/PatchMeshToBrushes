@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(
-  MeshToBrushes
+  PatchMeshToBrushes
   VERSION 0.1.0
   DESCRIPTION "Convert Quake III Arena era patchDef meshes into convex brushDef output"
   LANGUAGES CXX
 )
 
-option(MTB_BUILD_TESTS "Build MeshToBrushes tests" ON)
-option(MTB_BUILD_BENCHMARKS "Build MeshToBrushes benchmark tools" ON)
+option(PMTB_BUILD_TESTS "Build PatchMeshToBrushes tests" ON)
+option(PMTB_BUILD_BENCHMARKS "Build PatchMeshToBrushes benchmark tools" ON)
 
 configure_file(
-  cmake/MeshToBrushesVersion.hpp.in
-  "${PROJECT_BINARY_DIR}/generated/MeshToBrushesVersion.hpp"
+  cmake/PatchMeshToBrushesVersion.hpp.in
+  "${PROJECT_BINARY_DIR}/generated/PatchMeshToBrushesVersion.hpp"
   @ONLY
 )
 
@@ -43,15 +43,15 @@ else()
   target_compile_options(mtb_core PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-add_executable(mesh-to-brushes src/main.cpp)
-target_link_libraries(mesh-to-brushes PRIVATE mtb_core)
+add_executable(patch-mesh-to-brushes src/main.cpp)
+target_link_libraries(patch-mesh-to-brushes PRIVATE mtb_core)
 
-if(MTB_BUILD_BENCHMARKS)
+if(PMTB_BUILD_BENCHMARKS)
   add_executable(benchmark_large_map benchmarks/benchmark_large_map.cpp)
   target_link_libraries(benchmark_large_map PRIVATE mtb_core)
 endif()
 
-if(MTB_BUILD_TESTS)
+if(PMTB_BUILD_TESTS)
   enable_testing()
 
   add_executable(test_arguments tests/test_arguments.cpp)

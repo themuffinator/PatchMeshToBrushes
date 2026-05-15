@@ -114,7 +114,7 @@ ParseResult parse_arguments(const std::vector<std::string>& args) {
 
 std::string usage() {
   std::ostringstream out;
-  out << "Usage: mesh-to-brushes <input.map> [options]\n\n";
+  out << "Usage: patch-mesh-to-brushes <input.map> [options]\n\n";
   out << "Options:\n";
   out << "  -o, --output <path>       Output .map path\n";
   out << "      --dry-run             Analyze only; do not write brushes\n";

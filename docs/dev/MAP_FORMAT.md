@@ -36,7 +36,7 @@ unit.
 Phase 5 emits generated groups after the preserved or rewritten source map. In
 preserve mode, source patch primitives stay untouched. In replace mode, only the
 converted patch primitive spans are removed before the generated groups are
-appended. Existing `MeshToBrushes` generated groups are removed before new
+appended. Existing `PatchMeshToBrushes` generated groups are removed before new
 groups are appended so repeated runs do not accumulate duplicate output.
 
 ## Comments and Formatting
@@ -44,14 +44,14 @@ groups are appended so repeated runs do not accumulate duplicate output.
 The writer should insert generated content with stable comments:
 
 ```text
-// MeshToBrushes begin: source entity 0 patch assembly 3
+// PatchMeshToBrushes begin: source entity 0 patch assembly 3
 {
 "classname" "func_group"
 "_mtb_assembly" "3"
 "_mtb_source_patches" "0:4 0:5"
 ...
 }
-// MeshToBrushes end
+// PatchMeshToBrushes end
 ```
 
 Stable comments make repeated conversion and manual auditing easier.

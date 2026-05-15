@@ -1,32 +1,105 @@
-# MeshToBrushes
+# PatchMeshToBrushes
 
-MeshToBrushes is planned as a command line converter for Quake III Arena era
-`.map` files. Its job is to find every `patchDef`, `patchDef2`, and `patchDef3`
-mesh in the input map and replace or accompany those curved surfaces with a
-carefully planned set of convex `brushDef` brushes.
+PatchMeshToBrushes is a command line tool for Quake III Arena era `.map`
+files. It finds curved patch meshes and creates practical brush versions of
+them, grouped neatly so the result is easier to select, inspect, and edit in a
+map editor.
 
-The project has a compilable CLI, a preserving map parser, patch assembly
-analysis, in-memory brush planning, grouped brush emission, tests, and
-documentation for the geometry strategy.
+It is designed for mapper-friendly output:
 
-## Goals
+- curved patch meshes become convex `brushDef` brushes
+- each converted patch or patch set is placed in a `func_group`
+- visible faces keep the patch material where possible
+- hidden support faces use `textures/common/caulk`
+- flat sections keep at least `8` units of thickness
+- generated output can be kept beside the original patches or replace them in a
+  copy of the map
 
-- Convert open and closed patch meshes, including cylinders, spheres, caps,
-  flat sheets, bevels, end caps, and arbitrary simple curved meshes.
-- Group patches that share or overlap vertices so one surface assembly can be
-  converted as a coherent shape rather than as isolated strips.
-- Emit generated brushes for each patch mesh or patch assembly inside a coherent
-  `func_group` so the replacement remains easy to select, inspect, and move in
-  an editor.
-- Preserve patch-facing materials by deriving brush face texture projection from
-  the source patch texture coordinates.
-- Assign non-source faces to `textures/common/caulk`.
-- Use a minimum thickness of `8` units for flat sections.
-- Project curved simple meshes from the backface direction.
-- Avoid brittle construction patterns such as unnecessary narrow strips,
-  unaligned edges, and T-junctions.
+## Getting Started
 
-## Build
+1. Download the build for your computer from the
+   [latest release](https://github.com/themuffinator/MeshToBrushes/releases/latest).
+2. Unzip the download somewhere convenient, such as your desktop or a tools
+   folder.
+3. Open a terminal in that folder.
+4. Try a safe preview first:
+
+```powershell
+patch-mesh-to-brushes path\to\your.map --dry-run
+```
+
+If the preview looks good, write a new map file:
+
+```powershell
+patch-mesh-to-brushes path\to\your.map -o path\to\your_brushes.map
+```
+
+Your original map is left alone when you use `-o`. Open the new map in your
+editor and inspect the generated groups.
+
+Release downloads also include a styled `README.html` for offline reading. For
+bugs, ideas, or rough edges, use the
+[issue tracker](https://github.com/themuffinator/MeshToBrushes/issues).
+
+## Usage
+
+### Preview A Map
+
+Use this when you only want to see what the tool finds:
+
+```powershell
+patch-mesh-to-brushes my_map.map --dry-run
+```
+
+This does not write a map file.
+
+### Create A Converted Copy
+
+Use this for everyday conversion:
+
+```powershell
+patch-mesh-to-brushes my_map.map -o my_map_brushes.map
+```
+
+The converted brushes are added in new `func_group` objects, and the original
+patch meshes are kept.
+
+### Replace Patch Meshes In The Output Copy
+
+Use this when you want the new file to contain brushes instead of the original
+patch meshes:
+
+```powershell
+patch-mesh-to-brushes my_map.map -o my_map_brushes.map --replace-patches
+```
+
+This changes only the output file you choose with `-o`.
+
+### Write A Report
+
+Use a report when you want a readable summary of what happened:
+
+```powershell
+patch-mesh-to-brushes my_map.map -o my_map_brushes.map --report conversion-report.md
+```
+
+The report lists how many patch meshes were found, how they were grouped, and
+how many brushes were created.
+
+### Common Options
+
+| Option | What it does |
+| --- | --- |
+| `--dry-run` | Shows what would happen without writing a map. |
+| `-o, --output <path>` | Writes the converted map to this path. |
+| `--preserve-patches` | Keeps original patch meshes and adds brush groups. This is the default. |
+| `--replace-patches` | Removes converted patch meshes from the output file. |
+| `--report <path>` | Writes a conversion report. |
+| `--min-thickness <number>` | Sets the minimum thickness for flat brush sections. The default is `8`. |
+| `--version` | Prints the tool version. |
+| `--help` | Shows the built-in help. |
+
+## Build From Source
 
 ```powershell
 cmake -S . -B build
@@ -34,28 +107,6 @@ cmake --build build
 ctest --test-dir build -C Debug
 build\Debug\benchmark_large_map.exe tests\map\q3dm1sample.map 1 3
 ```
-
-## CLI Shape
-
-```powershell
-mesh-to-brushes input.map --dry-run
-mesh-to-brushes input.map -o output.map --min-thickness 8
-mesh-to-brushes input.map --report conversion-report.md --preserve-patches
-```
-
-Current behavior:
-
-- `--dry-run` reads the map, parses entities, key/value pairs, existing brush
-  blocks, and patch control grids, then prints a planned conversion summary with
-  early geometry notes such as planarity, sampling counts, planar UV fit, patch
-  assembly grouping, coarse topology classification, and in-memory brush planning
-  counts.
-- Non-dry-run conversion emits generated `brushDef` brushes inside one
-  `func_group` per patch assembly. By default it preserves source patches and
-  appends the groups; `--replace-patches` removes converted source patch blocks
-  before appending the generated groups.
-- `--report` writes patch grouping, brush strategy, brush counts, and texture
-  projection fit diagnostics.
 
 ## Test Fixtures
 
@@ -83,7 +134,9 @@ src/
   geometry/     Numeric geometry primitives
   io/           File loading and saving helpers
   map/          Map parser and document model
-tests/          Small baseline tests for the scaffold
+tests/          Small baseline tests and real map fixtures
 docs/dev/       Technical development notes and roadmap
 examples/       Tiny hand-authored map snippets for development
+benchmarks/     Optional benchmark tools
+tools/          Release packaging helpers
 ```

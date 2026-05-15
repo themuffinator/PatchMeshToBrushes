@@ -104,10 +104,10 @@ should be treated as invalid output. Once confidence is high, replacing patch
 blocks can become the default.
 
 Phase 5 implements the initial writer path: generated assembly groups are
-appended with stable `MeshToBrushes` comments, preserve mode keeps source patch
-blocks, and replace mode removes converted patch spans before appending the
-groups. Reports include planned group/brush counts and texture projection fit
-diagnostics.
+appended with stable `PatchMeshToBrushes` comments, preserve mode keeps source
+patch blocks, and replace mode removes converted patch spans before appending
+the groups. Reports include planned group/brush counts and texture projection
+fit diagnostics.
 
 Generated `func_group` entities should carry stable comments naming the source
 entity, source patch ids, and patch assembly id. If a patch assembly contains

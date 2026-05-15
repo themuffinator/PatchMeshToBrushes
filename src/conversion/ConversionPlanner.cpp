@@ -262,7 +262,7 @@ std::string render_markdown_report(const ConversionPlan& plan,
                  assembly.lattice.max_texture_projection_error);
   }
 
-  out << "# MeshToBrushes Conversion Report\n\n";
+  out << "# PatchMeshToBrushes Conversion Report\n\n";
   out << "## Settings\n\n";
   out << "- Minimum brush thickness: " << settings.min_brush_thickness << "\n";
   out << "- Vertex epsilon: " << settings.vertex_epsilon << "\n";

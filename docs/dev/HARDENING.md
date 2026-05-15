@@ -34,7 +34,8 @@ the pipeline stays diagnostic-driven and does not throw.
 
 `test_deterministic_output` converts the q3dm1 sample repeatedly and compares
 the exact map and report output. It also verifies preserve-mode reruns replace
-previous `MeshToBrushes` generated groups rather than accumulating duplicates.
+previous `PatchMeshToBrushes` generated groups rather than accumulating
+duplicates.
 
 ## Real-Map Regression
 
@@ -51,7 +52,7 @@ editor fixture. `test_q3dm1_fixture` verifies the parser counts, and
 ## Benchmark
 
 `benchmark_large_map` is a standalone executable built when
-`MTB_BUILD_BENCHMARKS` is enabled.
+`PMTB_BUILD_BENCHMARKS` is enabled.
 
 Example:
 

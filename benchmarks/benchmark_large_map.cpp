@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
   }
 
   const double divisor = static_cast<double>(iterations);
-  std::cout << "MeshToBrushes large-map benchmark\n";
+  std::cout << "PatchMeshToBrushes large-map benchmark\n";
   std::cout << "map: " << map_path.string() << "\n";
   std::cout << "repeat count: " << repeat_count << "\n";
   std::cout << "iterations: " << iterations << "\n";
