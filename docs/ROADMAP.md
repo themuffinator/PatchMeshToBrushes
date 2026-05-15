@@ -29,10 +29,10 @@
 
 ## Phase 3: Patch Grouping
 
-- [ ] Quantize patch boundary vertices.
-- [ ] Detect shared and overlapping boundary spans.
-- [ ] Build assembly graphs.
-- [ ] Classify assemblies as planar, cylindrical, spherical, capped, or
+- [x] Quantize patch boundary vertices.
+- [x] Detect shared and overlapping boundary spans.
+- [x] Build assembly graphs.
+- [x] Classify assemblies as planar, cylindrical, spherical, capped, or
       arbitrary.
 
 ## Phase 4: Brush Planning

@@ -51,6 +51,8 @@ The core planning and conversion logic. It owns:
 
 - patch analysis
 - patch assembly graph building
+- quantized patch boundary matching
+- shared and overlapping boundary span detection
 - topology classification
 - segmentation planning
 - brush generation

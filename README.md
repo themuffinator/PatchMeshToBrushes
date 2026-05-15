@@ -46,7 +46,8 @@ Current behavior:
 
 - `--dry-run` reads the map, parses entities, key/value pairs, existing brush
   blocks, and patch control grids, then prints a planned conversion summary with
-  early geometry notes such as planarity, sampling counts, and planar UV fit.
+  early geometry notes such as planarity, sampling counts, planar UV fit, patch
+  assembly grouping, and coarse topology classification.
 - Non-dry-run conversion returns a "not implemented" diagnostic until the brush
   builder is completed.
 

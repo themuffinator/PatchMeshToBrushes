@@ -73,6 +73,8 @@ The implementation should be deterministic and conservative:
 - Snap only at explicit decision points and report the snap tolerance used.
 - Use stable quantization for graph construction, not for final geometry.
 - Prefer exact source control points for seam detection.
+- Treat both shared boundary vertices and overlapping boundary spans as assembly
+  graph edges.
 - Sample Bezier patches with a target chord error, then simplify planar runs.
 - Carry a shared boundary lattice through every chart in an assembly.
 
