@@ -36,6 +36,16 @@ Vec3 bilinear_center(const SurfaceSample& a, const SurfaceSample& b,
   return (a.position + b.position + c.position + d.position) * 0.25;
 }
 
+double triangle_area(const Vec3& a, const Vec3& b, const Vec3& c) {
+  return length(cross(b - a, c - a)) * 0.5;
+}
+
+double quad_area(const SurfaceSample& a, const SurfaceSample& b,
+                 const SurfaceSample& c, const SurfaceSample& d) {
+  return triangle_area(a.position, b.position, c.position) +
+         triangle_area(a.position, c.position, d.position);
+}
+
 class AdaptiveSampler {
  public:
   AdaptiveSampler(const BezierPatchGrid& patch, double max_chord_error,
@@ -46,7 +56,26 @@ class AdaptiveSampler {
         scale_(1 << std::clamp(max_depth, 0, 20)) {}
 
   SampledSurface sample() {
-    add_cell(0.0, 0.0, 1.0, 1.0, 0);
+    if (!patch_.is_valid_quake_grid()) {
+      return std::move(surface_);
+    }
+
+    const std::size_t tile_rows = (patch_.rows() - 1) / 2;
+    const std::size_t tile_columns = (patch_.columns() - 1) / 2;
+    for (std::size_t tile_row = 0; tile_row < tile_rows; ++tile_row) {
+      for (std::size_t tile_column = 0; tile_column < tile_columns;
+           ++tile_column) {
+        const double u0 = static_cast<double>(tile_column) /
+                          static_cast<double>(tile_columns);
+        const double u1 = static_cast<double>(tile_column + 1) /
+                          static_cast<double>(tile_columns);
+        const double v0 =
+            static_cast<double>(tile_row) / static_cast<double>(tile_rows);
+        const double v1 = static_cast<double>(tile_row + 1) /
+                          static_cast<double>(tile_rows);
+        add_cell(u0, v0, u1, v1, 0);
+      }
+    }
     return std::move(surface_);
   }
 
@@ -74,8 +103,10 @@ class AdaptiveSampler {
     const SurfaceSample center =
         patch_.evaluate((u0 + u1) * 0.5, (v0 + v1) * 0.5);
     const double chord_error = distance(center.position, bilinear_center(a, b, c, d));
+    const bool degenerate_corners = quad_area(a, b, c, d) <= 1e-6;
 
-    if (chord_error > max_chord_error_ && depth < max_depth_) {
+    if ((chord_error > max_chord_error_ || degenerate_corners) &&
+        depth < max_depth_) {
       const double mid_u = (u0 + u1) * 0.5;
       const double mid_v = (v0 + v1) * 0.5;
       add_cell(u0, v0, mid_u, mid_v, depth + 1);

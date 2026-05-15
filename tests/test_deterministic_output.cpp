@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
       "replace markdown report");
   require(first_replace.generated_group_count == 63,
           "replace generated group count remains stable");
-  require(first_replace.generated_brush_count == 2440,
+  require(first_replace.generated_brush_count == 1320,
           "replace generated brush count remains stable");
 
   mtb::conversion::ConversionSettings preserve_settings;
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
                 "preserve rerun map output");
   require(rerun_preserve.generated_group_count == 63,
           "rerun generated group count remains stable");
-  require(rerun_preserve.generated_brush_count == 2440,
+  require(rerun_preserve.generated_brush_count == 1320,
           "rerun generated brush count remains stable");
 
   return 0;

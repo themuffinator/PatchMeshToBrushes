@@ -48,6 +48,19 @@ mtb::map::PatchSummary planar_patch(double x0, double x1, double y0, double y1,
                          patch_index);
 }
 
+mtb::map::PatchSummary planar_subdivided_patch() {
+  std::vector<std::vector<mtb::map::PatchControlPoint>> grid;
+  for (int row = 0; row < 5; ++row) {
+    std::vector<mtb::map::PatchControlPoint> controls;
+    for (int column = 0; column < 5; ++column) {
+      controls.push_back(point(static_cast<double>(column) * 32.0,
+                               static_cast<double>(row) * 32.0, 0.0));
+    }
+    grid.push_back(std::move(controls));
+  }
+  return patch_from_grid(std::move(grid));
+}
+
 mtb::map::PatchSummary curved_sheet(std::size_t patch_index = 0) {
   return patch_from_grid({
                              {point(0.0, 0.0, 0.0), point(32.0, 0.0, 0.0),
@@ -169,6 +182,18 @@ int main() {
     require(result.assemblies[0].brushes[0].faces.front().material ==
                 "textures/test/source",
             "source face inherits patch material");
+  }
+
+  {
+    const mtb::conversion::BrushPlanningResult result =
+        plan_brushes({planar_subdivided_patch()});
+    require_all_valid(result);
+    require(result.assemblies[0].brushes.size() == 4,
+            "planar 5x5 patch keeps its four authored subdivisions");
+    require(result.assemblies[0].lattice.source_quad_count == 4,
+            "subdivided planar patch records four source quads");
+    require(result.assemblies[0].lattice.planar_merge_count == 4,
+            "subdivided planar patch emits one extrusion per Bezier tile");
   }
 
   {

@@ -97,8 +97,16 @@ int main() {
             "generated output contains brushDef");
     require(build.map_text.find("textures/test/source") != std::string::npos,
             "source material is emitted");
-    require(build.map_text.find("textures/common/caulk") != std::string::npos,
+    require(build.map_text.find("common/caulk") != std::string::npos,
             "support faces are caulked");
+    require(build.map_text.find("textures/common/caulk") == std::string::npos,
+            "generated support faces use the short caulk texture path");
+    require(build.map_text.find("textures/test/source 134217728 0 0") !=
+                std::string::npos,
+            "source faces are emitted as detail brushwork");
+    require(build.map_text.find("common/caulk 134217728 0 0") !=
+                std::string::npos,
+            "support faces are emitted as detail brushwork");
 
     const mtb::map::MapDocument output =
         mtb::map::MapDocument::parse(build.map_text);
@@ -159,9 +167,9 @@ int main() {
     const std::string source =
         "{\n\"classname\" \"worldspawn\"\n"
         "  {\n"
-        "    ( 0 0 0 ) ( 0 64 0 ) ( 64 0 0 ) textures/common/caulk 0 0 0 1 1 0 0 0\n"
-        "    ( 0 0 -8 ) ( 64 0 -8 ) ( 0 64 -8 ) textures/common/caulk 0 0 0 1 1 0 0 0\n"
-        "    ( 0 0 0 ) ( 64 0 0 ) ( 0 0 -8 ) textures/common/caulk 0 0 0 1 1 0 0 0\n"
+        "    ( 0 0 0 ) ( 0 64 0 ) ( 64 0 0 ) common/caulk 0 0 0 1 1 0 0 0\n"
+        "    ( 0 0 -8 ) ( 64 0 -8 ) ( 0 64 -8 ) common/caulk 0 0 0 1 1 0 0 0\n"
+        "    ( 0 0 0 ) ( 64 0 0 ) ( 0 0 -8 ) common/caulk 0 0 0 1 1 0 0 0\n"
         "  }\n" +
         patch_block(0.0, 64.0, 0.0, 64.0) + "}\n";
     const mtb::conversion::BrushBuildResult build =

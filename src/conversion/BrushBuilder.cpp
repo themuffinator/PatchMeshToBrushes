@@ -21,6 +21,8 @@ constexpr std::string_view kGeneratedGroupEnd = "// PatchMeshToBrushes end";
 constexpr std::string_view kLegacyGeneratedGroupBegin = "// MeshToBrushes begin:";
 constexpr std::string_view kLegacyGeneratedGroupEnd = "// MeshToBrushes end";
 constexpr double kPlanePointSpan = 128.0;
+constexpr int kDetailContentsFlag = 134217728;
+constexpr std::string_view kCaulkMaterial = "common/caulk";
 
 enum class BrushWriteFormat {
   BrushDef,
@@ -149,10 +151,8 @@ void write_texture_projection(std::ostream& out, const PlannedFace& face) {
       << " 0 0 ) ( 0 " << format_double(kDefaultTextureScale) << " 0 ) )";
 }
 
-std::array<mtb::geometry::Vec3, 3> plane_points(
+std::array<mtb::geometry::Vec3, 3> synthetic_q3_plane_points(
     const mtb::geometry::Plane& input_plane) {
-  // Q3 brush planes are serialized as three points; this order preserves the
-  // plane normal expected by q3map's point-plane parser.
   const mtb::geometry::Plane plane = mtb::geometry::normalized_plane(input_plane);
   const mtb::geometry::Vec3 anchor = plane.normal * plane.distance;
   const mtb::geometry::Vec3 reference =
@@ -170,6 +170,18 @@ std::array<mtb::geometry::Vec3, 3> plane_points(
   };
 }
 
+std::array<mtb::geometry::Vec3, 3> q3_plane_points(
+    const PlannedFace& face) {
+  if (face.vertices.size() >= 3) {
+    // Quake 3 map brush planes are written in the opposite winding from the
+    // planner's outward face vertices. Reusing the generated face vertices
+    // keeps texture-bearing planes on the exact mesh side they came from.
+    return {face.vertices[0], face.vertices[2], face.vertices[1]};
+  }
+
+  return synthetic_q3_plane_points(face.plane);
+}
+
 void write_point(std::ostream& out, const mtb::geometry::Vec3& point) {
   out << "( " << format_double(point.x) << " " << format_double(point.y) << " "
       << format_double(point.z) << " )";
@@ -182,9 +194,9 @@ void write_brush_def(std::ostream& out, const PlannedBrush& brush) {
 
   for (const PlannedFace& face : brush.faces) {
     const std::string material =
-        face.material.empty() ? "textures/common/caulk" : face.material;
+        face.material.empty() ? std::string(kCaulkMaterial) : face.material;
     const std::array<mtb::geometry::Vec3, 3> points =
-        plane_points(face.plane);
+        q3_plane_points(face);
     out << "      ";
     write_point(out, points[0]);
     out << " ";
@@ -193,7 +205,7 @@ void write_brush_def(std::ostream& out, const PlannedBrush& brush) {
     write_point(out, points[2]);
     out << " ";
     write_texture_projection(out, face);
-    out << " " << material << " 0 0 0\n";
+    out << " " << material << " " << kDetailContentsFlag << " 0 0\n";
   }
 
   out << "    }\n";
@@ -205,16 +217,17 @@ void write_legacy_brush(std::ostream& out, const PlannedBrush& brush) {
 
   for (const PlannedFace& face : brush.faces) {
     const std::string material =
-        face.material.empty() ? "textures/common/caulk" : face.material;
+        face.material.empty() ? std::string(kCaulkMaterial) : face.material;
     const std::array<mtb::geometry::Vec3, 3> points =
-        plane_points(face.plane);
+        q3_plane_points(face);
     out << "    ";
     write_point(out, points[0]);
     out << " ";
     write_point(out, points[1]);
     out << " ";
     write_point(out, points[2]);
-    out << " " << material << " 0 0 0 1 1 0 0 0\n";
+    out << " " << material << " 0 0 0 1 1 " << kDetailContentsFlag
+        << " 0 0\n";
   }
 
   out << "  }\n";

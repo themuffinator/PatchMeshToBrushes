@@ -14,7 +14,9 @@ Core rules:
 - Merge coplanar or near-coplanar runs before brush construction.
 - Prefer wedges, fans, and caps with shared vertices over independent strips.
 - Reject brushes with tiny sliver faces unless no better representation exists.
-- Keep support faces caulked.
+- Keep support faces caulked with `common/caulk`.
+- Mark generated brushwork as detail so converted patch support does not become
+  structural world splitting.
 - Keep all brushes generated for one source patch or patch assembly together in
   one `func_group`; construction choices should optimize the whole grouped set,
   not isolated brush fragments.
@@ -110,7 +112,7 @@ Process:
 Support faces always use:
 
 ```text
-textures/common/caulk
+common/caulk
 ```
 
 ## Validation
@@ -122,4 +124,5 @@ Before writing a brush, validate:
 - all face windings are nondegenerate
 - all vertices are finite
 - every non-source face is caulk
+- every generated face carries detail contents flags
 - adjacent generated faces share full edges or explicitly documented seams

@@ -46,6 +46,22 @@ mtb::geometry::BezierPatchGrid flat_patch() {
   return mtb::geometry::BezierPatchGrid(controls);
 }
 
+mtb::geometry::BezierPatchGrid flat_subdivided_patch() {
+  using mtb::geometry::BezierControlPoint;
+  std::vector<std::vector<BezierControlPoint>> controls;
+  for (int row = 0; row < 5; ++row) {
+    std::vector<BezierControlPoint> control_row;
+    for (int column = 0; column < 5; ++column) {
+      control_row.push_back({
+          {static_cast<double>(column) * 16.0, static_cast<double>(row) * 16.0, 8.0},
+          {static_cast<double>(column), static_cast<double>(row)},
+      });
+    }
+    controls.push_back(control_row);
+  }
+  return mtb::geometry::BezierPatchGrid(controls);
+}
+
 }  // namespace
 
 int main() {
@@ -64,6 +80,12 @@ int main() {
         mtb::geometry::sample_surface_by_chord_error(flat_patch(), 0.01, 4);
     assert(flat.quads.size() == 1);
     assert(flat.samples.size() == 4);
+
+    const mtb::geometry::SampledSurface subdivided_flat =
+        mtb::geometry::sample_surface_by_chord_error(flat_subdivided_patch(),
+                                                     0.01, 4);
+    assert(subdivided_flat.quads.size() == 4);
+    assert(subdivided_flat.samples.size() == 9);
 
     const mtb::geometry::SampledSurface curved =
         mtb::geometry::sample_surface_by_chord_error(curved_patch(), 0.5, 5);

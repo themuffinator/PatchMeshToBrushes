@@ -11,7 +11,8 @@ It is designed for mapper-friendly output:
 - each converted patch or patch set is placed in a `func_group`
 - generated brush syntax matches the source map's brush style
 - visible faces keep the patch material where possible
-- hidden support faces use `textures/common/caulk`
+- hidden support faces use `common/caulk`
+- generated brushwork is marked as detail, not structural
 - flat sections keep at least `8` units of thickness
 - generated output replaces patch meshes by default, with an option to keep the
   original patches for comparison

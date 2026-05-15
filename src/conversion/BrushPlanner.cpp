@@ -13,10 +13,15 @@
 namespace mtb::conversion {
 namespace {
 
-constexpr const char* kCaulkMaterial = "textures/common/caulk";
+constexpr const char* kCaulkMaterial = "common/caulk";
 
 struct SurfaceCell {
   std::array<geometry::SurfaceSample, 4> corners;
+};
+
+struct PrismCorner {
+  geometry::SurfaceSample sample;
+  geometry::Vec3 back;
 };
 
 geometry::Vec3 polygon_area_vector(const std::vector<geometry::Vec3>& vertices) {
@@ -173,31 +178,60 @@ std::vector<SurfaceCell> sampled_cells(const mtb::map::PatchSummary& patch,
   return cells;
 }
 
-std::optional<SurfaceCell> planar_patch_cell(
+std::vector<SurfaceCell> planar_patch_cells(
     const mtb::map::PatchSummary& patch) {
+  std::vector<SurfaceCell> cells;
   if (!patch.has_expected_grid_size()) {
-    return std::nullopt;
+    return cells;
   }
 
-  const mtb::map::PatchControlPoint& top_left = patch.control_points.front().front();
-  const mtb::map::PatchControlPoint& top_right = patch.control_points.front().back();
-  const mtb::map::PatchControlPoint& bottom_right =
-      patch.control_points.back().back();
-  const mtb::map::PatchControlPoint& bottom_left =
-      patch.control_points.back().front();
+  const std::size_t tile_rows = (patch.dimensions.rows - 1) / 2;
+  const std::size_t tile_columns = (patch.dimensions.columns - 1) / 2;
+  cells.reserve(tile_rows * tile_columns);
 
-  return SurfaceCell{std::array<geometry::SurfaceSample, 4>{{
-      {top_left.position, top_left.uv, 0.0, 0.0},
-      {top_right.position, top_right.uv, 1.0, 0.0},
-      {bottom_right.position, bottom_right.uv, 1.0, 1.0},
-      {bottom_left.position, bottom_left.uv, 0.0, 1.0},
-  }}};
+  for (std::size_t tile_row = 0; tile_row < tile_rows; ++tile_row) {
+    for (std::size_t tile_column = 0; tile_column < tile_columns;
+         ++tile_column) {
+      const std::size_t row = tile_row * 2;
+      const std::size_t column = tile_column * 2;
+      const double u0 = static_cast<double>(tile_column) /
+                        static_cast<double>(tile_columns);
+      const double u1 = static_cast<double>(tile_column + 1) /
+                        static_cast<double>(tile_columns);
+      const double v0 =
+          static_cast<double>(tile_row) / static_cast<double>(tile_rows);
+      const double v1 = static_cast<double>(tile_row + 1) /
+                        static_cast<double>(tile_rows);
+
+      const mtb::map::PatchControlPoint& top_left =
+          patch.control_points[row][column];
+      const mtb::map::PatchControlPoint& top_right =
+          patch.control_points[row][column + 2];
+      const mtb::map::PatchControlPoint& bottom_right =
+          patch.control_points[row + 2][column + 2];
+      const mtb::map::PatchControlPoint& bottom_left =
+          patch.control_points[row + 2][column];
+
+      cells.push_back(SurfaceCell{std::array<geometry::SurfaceSample, 4>{{
+          {top_left.position, top_left.uv, u0, v0},
+          {top_right.position, top_right.uv, u1, v0},
+          {bottom_right.position, bottom_right.uv, u1, v1},
+          {bottom_left.position, bottom_left.uv, u0, v1},
+      }}});
+    }
+  }
+
+  return cells;
 }
 
 geometry::Vec3 cell_normal(const SurfaceCell& cell) {
-  const geometry::Vec3 normal = geometry::normalized(geometry::cross(
-      cell.corners[1].position - cell.corners[0].position,
-      cell.corners[3].position - cell.corners[0].position));
+  std::vector<geometry::Vec3> positions;
+  positions.reserve(cell.corners.size());
+  for (const geometry::SurfaceSample& corner : cell.corners) {
+    positions.push_back(corner.position);
+  }
+
+  const geometry::Vec3 normal = geometry::normalized(polygon_area_vector(positions));
   if (geometry::length_squared(normal) != 0.0) {
     return normal;
   }
@@ -219,53 +253,86 @@ PlannedFace make_face(std::vector<geometry::Vec3> vertices, PlannedFaceRole role
   return face;
 }
 
-std::vector<geometry::UvSample> source_uv_samples(const SurfaceCell& cell) {
+std::vector<geometry::UvSample> source_uv_samples(
+    const std::vector<PrismCorner>& corners) {
   std::vector<geometry::UvSample> samples;
-  samples.reserve(cell.corners.size());
-  for (const geometry::SurfaceSample& corner : cell.corners) {
-    samples.push_back({corner.position, corner.uv});
+  samples.reserve(corners.size());
+  for (const PrismCorner& corner : corners) {
+    samples.push_back({corner.sample.position, corner.sample.uv});
   }
   return samples;
+}
+
+std::vector<PrismCorner> prism_corners(
+    const SurfaceCell& cell, const std::array<geometry::Vec3, 4>& back,
+    double epsilon) {
+  std::vector<PrismCorner> corners;
+  corners.reserve(cell.corners.size());
+
+  for (std::size_t index = 0; index < cell.corners.size(); ++index) {
+    if (!corners.empty() &&
+        geometry::distance(corners.back().sample.position,
+                           cell.corners[index].position) <= epsilon) {
+      continue;
+    }
+    corners.push_back({cell.corners[index], back[index]});
+  }
+
+  if (corners.size() > 1 &&
+      geometry::distance(corners.front().sample.position,
+                         corners.back().sample.position) <= epsilon) {
+    corners.pop_back();
+  }
+
+  return corners;
 }
 
 PlannedBrush make_prism_brush(
     const SurfaceCell& cell, const std::array<geometry::Vec3, 4>& back,
     const mtb::map::PatchSummary& patch, std::size_t patch_index,
     BrushPlanningStrategy strategy, const ConversionSettings& settings) {
-  const std::array<geometry::Vec3, 4> front{
-      cell.corners[0].position,
-      cell.corners[1].position,
-      cell.corners[2].position,
-      cell.corners[3].position,
-  };
-
   PlannedBrush brush;
   brush.strategy = strategy;
   brush.source_patch_indices.push_back(patch_index);
+  const std::vector<PrismCorner> corners =
+      prism_corners(cell, back, settings.vertex_epsilon);
+  if (corners.size() < 3) {
+    brush.diagnostics.push_back(
+        "Brush source cell has fewer than three unique vertices.");
+    return brush;
+  }
+
+  std::vector<geometry::Vec3> front;
+  std::vector<geometry::Vec3> back_vertices;
+  front.reserve(corners.size());
+  back_vertices.reserve(corners.size());
+  for (const PrismCorner& corner : corners) {
+    front.push_back(corner.sample.position);
+    back_vertices.push_back(corner.back);
+  }
+
   PlannedFace source_face =
-      make_face({front[0], front[1], front[2], front[3]},
-                PlannedFaceRole::SourceSurface, patch.material, patch_index,
-                true);
-  source_face.uv_samples = source_uv_samples(cell);
+      make_face(front, PlannedFaceRole::SourceSurface, patch.material,
+                patch_index, true);
+  source_face.uv_samples = source_uv_samples(corners);
   source_face.uv_projection =
       geometry::fit_planar_uv_projection(source_face.uv_samples);
   source_face.has_uv_projection = source_face.uv_projection.valid;
   brush.faces.push_back(std::move(source_face));
-  brush.faces.push_back(make_face({back[3], back[2], back[1], back[0]},
+
+  std::vector<geometry::Vec3> back_face = back_vertices;
+  std::reverse(back_face.begin(), back_face.end());
+  brush.faces.push_back(make_face(std::move(back_face),
                                   PlannedFaceRole::Support, kCaulkMaterial,
                                   patch_index, false));
-  brush.faces.push_back(make_face({front[0], back[0], back[1], front[1]},
-                                  PlannedFaceRole::Support, kCaulkMaterial,
-                                  patch_index, false));
-  brush.faces.push_back(make_face({front[1], back[1], back[2], front[2]},
-                                  PlannedFaceRole::Support, kCaulkMaterial,
-                                  patch_index, false));
-  brush.faces.push_back(make_face({front[2], back[2], back[3], front[3]},
-                                  PlannedFaceRole::Support, kCaulkMaterial,
-                                  patch_index, false));
-  brush.faces.push_back(make_face({front[3], back[3], back[0], front[0]},
-                                  PlannedFaceRole::Support, kCaulkMaterial,
-                                  patch_index, false));
+
+  for (std::size_t index = 0; index < front.size(); ++index) {
+    const std::size_t next = (index + 1) % front.size();
+    brush.faces.push_back(make_face(
+        {front[index], back_vertices[index], back_vertices[next], front[next]},
+        PlannedFaceRole::Support, kCaulkMaterial, patch_index, false));
+  }
+
   validate_brush(brush, settings);
   return brush;
 }
@@ -435,17 +502,17 @@ void append_patch_brushes(AssemblyBrushPlan& plan,
 
   if (strategy == BrushPlanningStrategy::PlanarExtrusion ||
       strategy == BrushPlanningStrategy::CapExtrusion) {
-    const std::optional<SurfaceCell> merged_cell = planar_patch_cell(patch);
-    if (merged_cell.has_value()) {
-      PlannedBrush brush = make_backface_brush(*merged_cell, patch, patch_index,
-                                               strategy, settings);
+    const std::vector<SurfaceCell> cells = planar_patch_cells(patch);
+    plan.lattice.source_quad_count += cells.size();
+    for (const SurfaceCell& cell : cells) {
+      PlannedBrush brush =
+          make_backface_brush(cell, patch, patch_index, strategy, settings);
       if (brush.valid) {
         plan.brushes.push_back(std::move(brush));
         ++plan.lattice.planar_merge_count;
       } else {
         ++plan.lattice.skipped_degenerate_brush_count;
       }
-      ++plan.lattice.source_quad_count;
     }
     return;
   }

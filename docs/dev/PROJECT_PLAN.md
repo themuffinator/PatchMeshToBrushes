@@ -26,7 +26,7 @@ coherent caps, and broad convex pieces where the topology allows it.
 - **Source face**: A brush face that lies on, or approximates, the visible patch
   surface. It inherits the patch texture.
 - **Support face**: Any face that exists only to close the convex brush. It uses
-  `textures/common/caulk`.
+  `common/caulk`.
 
 ## End-to-End Pipeline
 
@@ -55,7 +55,8 @@ coherent caps, and broad convex pieces where the topology allows it.
      possible
 9. Assign materials:
    - source faces inherit the patch material and a solved texture projection
-   - support faces use `textures/common/caulk`
+   - support faces use `common/caulk`
+   - generated brush faces are marked with detail contents flags
 10. Validate every generated brush:
    - convexity
    - nonzero volume

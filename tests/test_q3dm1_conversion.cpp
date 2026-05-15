@@ -42,20 +42,20 @@ int main(int argc, char** argv) {
   const mtb::conversion::BrushBuildResult preserve = convert(document, false);
   require(preserve.generated_group_count == 63,
           "preserve generates one group per patch assembly");
-  require(preserve.generated_brush_count == 2440,
+  require(preserve.generated_brush_count == 1320,
           "preserve generated brush count");
   require(preserve.replaced_patch_count == 0, "preserve replaces no patches");
   const mtb::map::MapDocument preserve_output =
       mtb::map::MapDocument::parse(preserve.map_text);
   require(preserve_output.diagnostics().empty(), "preserve output parses");
   require(preserve_output.entities().size() == 251, "preserve entity count");
-  require(preserve_output.brushes().size() == 3427, "preserve brush count");
+  require(preserve_output.brushes().size() == 2307, "preserve brush count");
   require(preserve_output.patches().size() == 113, "preserve patch count");
 
   const mtb::conversion::BrushBuildResult replace = convert(document, true);
   require(replace.generated_group_count == 63,
           "replace generates one group per patch assembly");
-  require(replace.generated_brush_count == 2440,
+  require(replace.generated_brush_count == 1320,
           "replace generated brush count");
   require(replace.replaced_patch_count == 113, "replace removes source patches");
   require(replace.map_text.find("patchDef2") == std::string::npos,
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
       mtb::map::MapDocument::parse(replace.map_text);
   require(replace_output.diagnostics().empty(), "replace output parses");
   require(replace_output.entities().size() == 251, "replace entity count");
-  require(replace_output.brushes().size() == 3427, "replace brush count");
+  require(replace_output.brushes().size() == 2307, "replace brush count");
   require(replace_output.patches().empty(), "replace removes all patches");
 
   return 0;

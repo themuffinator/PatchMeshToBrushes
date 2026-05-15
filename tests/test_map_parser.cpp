@@ -20,14 +20,14 @@ int main() {
   "message" "hello"
   // brush 0
   {
-    ( 0 0 0 ) ( 64 0 0 ) ( 64 64 0 ) textures/common/caulk 0 0 0 1 1 0 0 0
-    ( 0 0 8 ) ( 64 64 8 ) ( 64 0 8 ) textures/common/caulk 0 0 0 1 1 0 0 0
-    ( 0 0 0 ) ( 0 0 8 ) ( 64 0 8 ) textures/common/caulk 0 0 0 1 1 0 0 0
+    ( 0 0 0 ) ( 64 0 0 ) ( 64 64 0 ) common/caulk 0 0 0 1 1 0 0 0
+    ( 0 0 8 ) ( 64 64 8 ) ( 64 0 8 ) common/caulk 0 0 0 1 1 0 0 0
+    ( 0 0 0 ) ( 0 0 8 ) ( 64 0 8 ) common/caulk 0 0 0 1 1 0 0 0
   }
   {
     brushDef
     {
-      ( 0 0 8 ) ( 0 128 8 ) ( 128 0 8 ) ( ( 1 0 0 ) ( 0 1 0 ) ) textures/common/caulk 0 0 0
+      ( 0 0 8 ) ( 0 128 8 ) ( 128 0 8 ) ( ( 1 0 0 ) ( 0 1 0 ) ) common/caulk 0 0 0
     }
   }
   {

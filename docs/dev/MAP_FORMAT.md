@@ -26,7 +26,7 @@ diagnostics so dry-run analysis can continue across the rest of the map.
 
 The target output is convex brush data. Each brush must describe a valid closed
 convex polyhedron. Faces that approximate the source patch carry the source
-texture projection; support faces are caulked.
+texture projection; support faces are caulked with `common/caulk`.
 
 Quake III `brushDef` faces are emitted with three point plane definitions,
 followed by the brush primitive texture matrix. The normal/distance plane form
@@ -42,6 +42,9 @@ Generated brushes are not written as loose top-level world brushes. All brushes
 covering a single patch mesh, or a grouped set of related patch meshes, must be
 contained in one `func_group` entity so the result remains a coherent editable
 unit.
+
+Generated brush faces carry the Quake III detail contents flag so the output is
+treated as detail brushwork rather than new structural world splitting.
 
 Phase 5 emits generated groups after the preserved or rewritten source map. In
 replace mode, only the converted patch primitive spans are removed before the

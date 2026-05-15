@@ -32,7 +32,7 @@ struct PlannedFace {
   geometry::Plane plane;
   geometry::PlanarUvProjection uv_projection;
   PlannedFaceRole role = PlannedFaceRole::Support;
-  std::string material = "textures/common/caulk";
+  std::string material = "common/caulk";
   std::size_t source_patch_index = 0;
   bool has_source_patch = false;
   bool has_uv_projection = false;
